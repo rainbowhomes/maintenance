@@ -1,0 +1,1827 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rainbow Homes - Apartment Maintenance Tracker</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <!-- Fallback CDN -->
+    <script>
+        // Ensure Chart.js is loaded
+        if (typeof Chart === 'undefined') {
+            const script = document.createElement('script');
+            script.src = 'https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js';
+            script.onload = function() {
+                console.log('Chart.js loaded from fallback CDN');
+            };
+            document.head.appendChild(script);
+        }
+    </script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .header p {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+
+        .main-content {
+            padding: 30px;
+            background: white;
+            min-height: 100vh;
+        }
+
+        /* PDF Export specific styles */
+        .pdf-export {
+            background: white !important;
+            color: black !important;
+        }
+
+        .pdf-export .card {
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1) !important;
+            border: 1px solid #ddd !important;
+        }
+
+        .pdf-export .chart-card {
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1) !important;
+            border: 1px solid #ddd !important;
+        }
+
+        .controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        .month-selector {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .month-selector select {
+            padding: 10px 15px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+            background: white;
+            cursor: pointer;
+            transition: border-color 0.3s;
+        }
+
+        .month-selector select:focus {
+            outline: none;
+            border-color: #4facfe;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .edit-month-btn, .add-month-btn, .delete-month-btn, .export-pdf-btn, .data-export-btn, .data-import-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: transform 0.2s;
+            white-space: nowrap;
+        }
+
+        .edit-month-btn {
+            background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%);
+        }
+
+        .delete-month-btn {
+            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a52 100%);
+        }
+
+        .export-pdf-btn {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        }
+
+        .data-export-btn {
+            background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+        }
+
+        .data-import-btn {
+            background: linear-gradient(135deg, #d299c2 0%, #fef9d7 100%);
+        }
+
+        .edit-month-btn:hover, .add-month-btn:hover, .delete-month-btn:hover, .export-pdf-btn:hover, .data-export-btn:hover, .data-import-btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .summary-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+            border-left: 5px solid;
+            transition: transform 0.3s;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+        }
+
+        .card.collected {
+            border-left-color: #4CAF50;
+        }
+
+        .card.expensed {
+            border-left-color: #FF9800;
+        }
+
+        .card.balance {
+            border-left-color: #2196F3;
+        }
+
+        .card h3 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 1.1em;
+        }
+
+        .card .amount {
+            font-size: 2em;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .card.collected .amount {
+            color: #4CAF50;
+        }
+
+        .card.expensed .amount {
+            color: #FF9800;
+        }
+
+        .card.balance .amount {
+            color: #2196F3;
+        }
+
+        .card.balance.negative .amount {
+            color: #F44336;
+        }
+
+        .charts-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        .chart-card {
+            background: white;
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+        }
+
+        .chart-card h3 {
+            text-align: center;
+            margin-bottom: 20px;
+            color: #333;
+            font-size: 1.3em;
+        }
+
+        .chart-container {
+            position: relative;
+            height: 400px;
+            width: 100%;
+            min-height: 300px;
+        }
+
+        .chart-container canvas {
+            max-width: 100%;
+            height: auto;
+        }
+
+        .expense-breakdown {
+            background: white;
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+        }
+
+        .expense-breakdown h3 {
+            margin-bottom: 20px;
+            color: #333;
+            font-size: 1.3em;
+        }
+
+        .expense-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+
+        .expense-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border-left: 4px solid;
+        }
+
+        .expense-item.watchman { border-left-color: #FF6B6B; }
+        .expense-item.waste { border-left-color: #4ECDC4; }
+        .expense-item.electricity { border-left-color: #45B7D1; }
+        .expense-item.cleaning { border-left-color: #96CEB4; }
+        .expense-item.water { border-left-color: #FFEAA7; }
+        .expense-item.generator { border-left-color: #DDA0DD; }
+        .expense-item.misc { border-left-color: #98D8C8; }
+        .expense-item.softener { border-left-color: #FF8C42; }
+
+        .expense-item .label {
+            font-weight: 600;
+            color: #333;
+        }
+
+        .expense-item .amount {
+            font-weight: bold;
+            color: #666;
+        }
+
+        .comments-section {
+            background: white;
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+        }
+
+        .comments-section h3 {
+            margin-bottom: 15px;
+            color: #333;
+            font-size: 1.3em;
+        }
+
+        .comments-text {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            border-left: 4px solid #4facfe;
+            font-style: italic;
+            color: #555;
+            line-height: 1.6;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+
+        .add-month-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+        }
+
+        .modal-content {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            width: 90%;
+            max-width: 600px;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+        }
+
+        .modal-header h2 {
+            color: #333;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: #666;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #4facfe;
+        }
+
+        .form-group textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+            font-family: inherit;
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #4facfe;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .submit-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            width: 100%;
+            margin-top: 20px;
+        }
+
+        @media (max-width: 768px) {
+            .charts-container {
+                grid-template-columns: 1fr;
+            }
+            
+            .controls {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .month-selector {
+                justify-content: center;
+            }
+            
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+            
+            .controls {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 15px;
+            }
+            
+            .month-selector {
+                justify-content: center;
+            }
+            
+            .action-buttons {
+                justify-content: center;
+                gap: 6px;
+            }
+            
+            .edit-month-btn, .add-month-btn, .delete-month-btn, .export-pdf-btn, .data-export-btn, .data-import-btn {
+                padding: 6px 10px;
+                font-size: 12px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🏠 Rainbow Homes</h1>
+            <p>Apartment Maintenance Expense Tracker</p>
+        </div>
+
+        <div class="main-content">
+            <div class="controls">
+                <div class="month-selector">
+                    <label for="monthSelect">Select Month:</label>
+                    <select id="monthSelect" onchange="changeMonth()">
+                        <option value="2025-07">July 2025</option>
+                        <option value="2025-08">August 2025</option>
+                        <option value="2025-09">September 2025</option>
+                    </select>
+                </div>
+                <div class="action-buttons">
+                    <button class="edit-month-btn" onclick="openEditMonthModal()">✏️ Edit</button>
+                    <button class="add-month-btn" onclick="openAddMonthModal()">+ Add</button>
+                    <button class="delete-month-btn" onclick="deleteCurrentMonth()">🗑️ Delete</button>
+                    <button class="export-pdf-btn" onclick="exportToPDF()">📄 PDF</button>
+                    <button class="data-export-btn" onclick="exportData()">💾 Export</button>
+                    <input type="file" id="importFile" accept=".json" style="display: none;" onchange="importData(event)">
+                    <button class="data-import-btn" onclick="document.getElementById('importFile').click()">📥 Import</button>
+                </div>
+            </div>
+
+            <div class="summary-cards">
+                <div class="card collected">
+                    <h3>Maintenance Collected</h3>
+                    <div class="amount" id="collectedAmount">₹0</div>
+                </div>
+                <div class="card expensed">
+                    <h3>Maintenance Expensed</h3>
+                    <div class="amount" id="expensedAmount">₹0</div>
+                </div>
+                <div class="card balance">
+                    <h3>Corpus Fund</h3>
+                    <div class="amount" id="balanceAmount">₹0</div>
+                </div>
+            </div>
+
+            <div class="charts-container">
+                <div class="chart-card">
+                    <h3>Expense Breakdown</h3>
+                    <div class="chart-container">
+                        <canvas id="expenseChart"></canvas>
+                    </div>
+                </div>
+                <div class="chart-card">
+                    <h3>Fund Distribution (Expensed vs Corpus Fund)</h3>
+                    <div class="chart-container">
+                        <canvas id="fundChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <div class="expense-breakdown">
+                <h3>Detailed Expense Breakdown</h3>
+                <div class="expense-grid" id="expenseGrid">
+                    <!-- Expense items will be populated here -->
+                </div>
+            </div>
+
+            <div class="comments-section">
+                <h3>Comments</h3>
+                <div class="comments-text" id="commentsText">
+                    <!-- Comments will be populated here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Month Modal -->
+    <div class="add-month-modal" id="addMonthModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Add New Month</h2>
+                <button class="close-btn" onclick="closeAddMonthModal()">&times;</button>
+            </div>
+            <form id="addMonthForm">
+                <div class="form-group">
+                    <label for="newMonth">Month & Year:</label>
+                    <input type="month" id="newMonth" required>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="maintenanceCollected">Maintenance Collected:</label>
+                        <input type="number" id="maintenanceCollected" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="watchmanSalary">Watchman Salary:</label>
+                        <input type="number" id="watchmanSalary" required>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="wasteManagement">Waste Management:</label>
+                        <input type="number" id="wasteManagement" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="commonElectricity">Common Area Electricity:</label>
+                        <input type="number" id="commonElectricity" required>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="cleaningMaterial">Cleaning Material:</label>
+                        <input type="number" id="cleaningMaterial" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="waterBill">Manjeera Water Bill:</label>
+                        <input type="number" id="waterBill" required>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="generatorFuel">Generator Fuel:</label>
+                        <input type="number" id="generatorFuel" value="0">
+                    </div>
+                    <div class="form-group">
+                        <label for="softenerMaintenance">Softener Maintenance:</label>
+                        <input type="number" id="softenerMaintenance" value="0">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="miscellaneous">Miscellaneous:</label>
+                        <input type="number" id="miscellaneous" value="0">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="comments">Comments:</label>
+                    <textarea id="comments" placeholder="Enter any additional comments... (Use Shift+Enter for new lines)" rows="3"></textarea>
+                </div>
+                <button type="submit" class="submit-btn">Add Month</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Edit Month Modal -->
+    <div class="add-month-modal" id="editMonthModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Edit Month Data</h2>
+                <button class="close-btn" onclick="closeEditMonthModal()">&times;</button>
+            </div>
+            <form id="editMonthForm">
+                <div class="form-group">
+                    <label for="editMonth">Month & Year:</label>
+                    <input type="month" id="editMonth" required readonly>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="editMaintenanceCollected">Maintenance Collected:</label>
+                        <input type="number" id="editMaintenanceCollected" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="editWatchmanSalary">Watchman Salary:</label>
+                        <input type="number" id="editWatchmanSalary" required>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="editWasteManagement">Waste Management:</label>
+                        <input type="number" id="editWasteManagement" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="editCommonElectricity">Common Area Electricity:</label>
+                        <input type="number" id="editCommonElectricity" required>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="editCleaningMaterial">Cleaning Material:</label>
+                        <input type="number" id="editCleaningMaterial" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="editWaterBill">Manjeera Water Bill:</label>
+                        <input type="number" id="editWaterBill" required>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="editGeneratorFuel">Generator Fuel:</label>
+                        <input type="number" id="editGeneratorFuel" value="0">
+                    </div>
+                    <div class="form-group">
+                        <label for="editSoftenerMaintenance">Softener Maintenance:</label>
+                        <input type="number" id="editSoftenerMaintenance" value="0">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="editMiscellaneous">Miscellaneous:</label>
+                        <input type="number" id="editMiscellaneous" value="0">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="editComments">Comments:</label>
+                    <textarea id="editComments" placeholder="Enter any additional comments... (Use Shift+Enter for new lines)" rows="3"></textarea>
+                </div>
+                <button type="submit" class="submit-btn">Update Month</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // Data structure for all months
+        const maintenanceData = {
+            '2025-07': {
+                collected: 20000,
+                expensed: 27541,
+                balance: -7541,
+                corpusFund: -7541,
+                expenses: {
+                    watchman: 8000,
+                    waste: 500,
+                    electricity: 11304,
+                    cleaning: 1000,
+                    water: 2911,
+                    generator: 3826,
+                    softener: 0,
+                    misc: 0
+                },
+                comments: "-7541 is reduced from the corpus fund due to additional expense in the last month for water bill, cleaning materials and generator fuel"
+            },
+            '2025-08': {
+                collected: 40000,
+                expensed: 27187,
+                balance: 12813,
+                corpusFund: 5272,
+                expenses: {
+                    watchman: 8000,
+                    waste: 700,
+                    electricity: 10672,
+                    cleaning: 170,
+                    water: 1445,
+                    generator: 0,
+                    softener: 0,
+                    misc: 6200
+                },
+                comments: "-7541 is reduced from the corpus fund due to additional expense in the last month for water bill, cleaning materials and generator fuel\n\nMiscellaneous expense details - \n-2500 for Drainage block\n-1000 for Common Electricity meter replacement\n-2700 for Water testing"
+            },
+            '2025-09': {
+                collected: 40000,
+                expensed: 18846,
+                balance: 21154,
+                corpusFund: 26426,
+                expenses: {
+                    watchman: 8000,
+                    waste: 900,
+                    electricity: 4752,
+                    cleaning: 770,
+                    water: 1416,
+                    generator: 0,
+                    softener: 0,
+                    misc: 3008
+                },
+                comments: "Miscellaneous expense details-\n-955 - Old common electricity bill \n-2053 - Sump Cleaning"
+            },
+            '2025-10': {
+                collected: 25000,
+                expensed: 33670,
+                balance: -8670,
+                corpusFund: 17756,
+                expenses: {
+                    watchman: 8000,
+                    waste: 900,
+                    electricity: 6381,
+                    cleaning: 170,
+                    water: 1416,
+                    generator: 0,
+                    softener: 0,
+                    misc: 16803
+                },
+                comments: "600 - Dasara Maamulu to Watchman\n400 - Dasara Maamulu to Waste Management\n5000 - Diwali Lunch\n400 - Diwali Lunch Disposables\n1000 - Diwali Flowers and Mango Leaves\n218 - Diwali Lights\n277 - Water Bottles\n950 - Salt Delivery Charges\n7000 - Salt 500 Kgs bought for next 5-6 months. \n958 - Old Common Electricity Bill "
+            },
+            '2025-11': {
+                collected: 25000,
+                expensed: 18965,
+                balance: 6035,
+                corpusFund: 23791,
+                expenses: {
+                    watchman: 8000,
+                    waste: 900,
+                    electricity: 5327,
+                    cleaning: 534,
+                    water: 1416,
+                    generator: 0,
+                    softener: 0,
+                    misc: 2788
+                },
+                comments: "958 - Old Common Electricity Bill\n1500 - Generator auto switch extra cable\n330 - Generator Neutral connection cable charges and switch for light in the area behind lift. "
+            },
+            '2025-12': {
+                collected: 25000,
+                expensed: 31746,
+                balance: -6746,
+                corpusFund: 17045,
+                expenses: {
+                    watchman: 8000,
+                    waste: 1000,
+                    electricity: 6590,
+                    cleaning: 420,
+                    water: 1416,
+                    generator: 3826,
+                    softener: 9994,
+                    misc: 510
+                },
+                comments: "500 - Waste Bin Cutting - Carpenter\n80 - Softner related material\n600 - Terrace Water softner Electricity connection - Electrician\n1814 - Water softner shifting additional material charges\n7500 - Water Softner Salt (500Kg) + transport charges\n"
+            },
+            '2026-01': {
+                collected: 25000,
+                expensed: 23934,
+                balance: 1066,
+                corpusFund: 18111,
+                expenses: {
+                    watchman: 8000,
+                    waste: 1000,
+                    electricity: 8818,
+                    cleaning: 200,
+                    water: 1416,
+                    generator: 0,
+                    softener: 0,
+                    misc: 4500
+                },
+                comments: "2000 - Door welding work\n500 - Pongal Flowers for apartment\n2000 - Advance for Watchman (Will be deducted next month in Salary)"
+            }
+        };
+
+        let currentMonth = '2026-01';
+        let expenseChart = null;
+        let fundChart = null;
+
+        // Data persistence functions
+        function saveDataToStorage() {
+            try {
+                localStorage.setItem('rainbowHomesData', JSON.stringify(maintenanceData));
+                console.log('Data saved to localStorage');
+                
+                // Show save indicator
+                showSaveIndicator();
+            } catch (error) {
+                console.error('Error saving data to localStorage:', error);
+            }
+        }
+
+        function showSaveIndicator() {
+            // Create or update save indicator
+            let indicator = document.getElementById('saveIndicator');
+            if (!indicator) {
+                indicator = document.createElement('div');
+                indicator.id = 'saveIndicator';
+                indicator.style.cssText = `
+                    position: fixed;
+                    top: 20px;
+                    right: 20px;
+                    background: #4CAF50;
+                    color: white;
+                    padding: 10px 20px;
+                    border-radius: 5px;
+                    font-size: 14px;
+                    z-index: 1000;
+                    opacity: 0;
+                    transition: opacity 0.3s;
+                `;
+                document.body.appendChild(indicator);
+            }
+            
+            indicator.textContent = '💾 Data Saved';
+            indicator.style.opacity = '1';
+            
+            // Hide after 2 seconds
+            setTimeout(() => {
+                indicator.style.opacity = '0';
+            }, 2000);
+        }
+
+        function exportData() {
+            try {
+                const dataToExport = {
+                    maintenanceData: maintenanceData,
+                    exportDate: new Date().toISOString(),
+                    version: '1.0'
+                };
+                
+                const dataStr = JSON.stringify(dataToExport, null, 2);
+                const dataBlob = new Blob([dataStr], {type: 'application/json'});
+                
+                const link = document.createElement('a');
+                link.href = URL.createObjectURL(dataBlob);
+                link.download = `rainbow_homes_data_${new Date().toISOString().split('T')[0]}.json`;
+                link.click();
+                
+                console.log('Data exported successfully');
+            } catch (error) {
+                console.error('Error exporting data:', error);
+                alert('Error exporting data: ' + error.message);
+            }
+        }
+
+        function importData(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const importedData = JSON.parse(e.target.result);
+                    
+                    if (importedData.maintenanceData) {
+                        // Merge imported data, ensuring softener field exists
+                        Object.keys(importedData.maintenanceData).forEach(month => {
+                            if (importedData.maintenanceData[month] && importedData.maintenanceData[month].expenses) {
+                                // Ensure softener field exists
+                                if (typeof importedData.maintenanceData[month].expenses.softener === 'undefined') {
+                                    importedData.maintenanceData[month].expenses.softener = 0;
+                                }
+                            }
+                            maintenanceData[month] = importedData.maintenanceData[month];
+                        });
+                        
+                        // Auto-save to localStorage immediately
+                        saveDataToStorage();
+                        
+                        // Update month dropdown
+                        updateMonthDropdown();
+                        
+                        // Update display
+                        updateDisplay();
+                        
+                        alert('Data imported and saved successfully!');
+                    } else {
+                        alert('Invalid data format. Please select a valid Rainbow Homes data file.');
+                    }
+                } catch (error) {
+                    console.error('Error importing data:', error);
+                    alert('Error importing data: ' + error.message);
+                }
+            };
+            
+            reader.readAsText(file);
+            
+            // Reset file input
+            event.target.value = '';
+        }
+
+        function loadDataFromStorage() {
+            try {
+                const savedData = localStorage.getItem('rainbowHomesData');
+                if (savedData) {
+                    const parsedData = JSON.parse(savedData);
+                    // Merge saved data with default data, ensuring softener field exists
+                    Object.keys(parsedData).forEach(month => {
+                        if (parsedData[month] && parsedData[month].expenses) {
+                            // Ensure softener field exists
+                            if (typeof parsedData[month].expenses.softener === 'undefined') {
+                                parsedData[month].expenses.softener = 0;
+                            }
+                        }
+                        maintenanceData[month] = parsedData[month];
+                    });
+                    console.log('Data loaded from localStorage');
+                    return true;
+                } else {
+                    // No saved data, save default data automatically
+                    console.log('No saved data found, saving default data to localStorage');
+                    saveDataToStorage();
+                    return false;
+                }
+            } catch (error) {
+                console.error('Error loading data from localStorage:', error);
+                // Save default data if there's an error loading
+                saveDataToStorage();
+                return false;
+            }
+        }
+
+        function updateMonthDropdown() {
+            const monthSelect = document.getElementById('monthSelect');
+            const currentValue = monthSelect.value;
+            
+            // Clear existing options
+            monthSelect.innerHTML = '';
+            
+            // Add all available months
+            const sortedMonths = Object.keys(maintenanceData).sort();
+            sortedMonths.forEach(month => {
+                const option = document.createElement('option');
+                option.value = month;
+                option.textContent = new Date(month + '-01').toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+                monthSelect.appendChild(option);
+            });
+            
+            // Restore selected month or default to first month
+            if (sortedMonths.includes(currentValue)) {
+                monthSelect.value = currentValue;
+                currentMonth = currentValue;
+            } else if (sortedMonths.length > 0) {
+                monthSelect.value = sortedMonths[0];
+                currentMonth = sortedMonths[0];
+            }
+        }
+
+        // Initialize the page
+        function init() {
+            updateDisplay();
+            createCharts();
+            // Auto-save data on initialization
+            saveDataToStorage();
+        }
+
+        // Update all display elements
+        function updateDisplay() {
+            const data = maintenanceData[currentMonth];
+            
+            // Update summary cards
+            document.getElementById('collectedAmount').textContent = `₹${data.collected.toLocaleString()}`;
+            document.getElementById('expensedAmount').textContent = `₹${data.expensed.toLocaleString()}`;
+            document.getElementById('balanceAmount').textContent = `₹${data.corpusFund.toLocaleString()}`;
+            
+            // Update balance card color
+            const balanceCard = document.querySelector('.card.balance');
+            if (data.corpusFund < 0) {
+                balanceCard.classList.add('negative');
+            } else {
+                balanceCard.classList.remove('negative');
+            }
+            
+            // Update expense breakdown
+            updateExpenseBreakdown(data.expenses);
+            
+            // Update comments
+            document.getElementById('commentsText').textContent = data.comments;
+            
+            // Update charts
+            updateCharts();
+            
+            // Update delete button state
+            updateDeleteButtonState();
+        }
+
+        // Update delete button state based on available months
+        function updateDeleteButtonState() {
+            const deleteButton = document.querySelector('.delete-month-btn');
+            const availableMonths = Object.keys(maintenanceData).sort();
+            
+            if (availableMonths.length <= 1) {
+                deleteButton.disabled = true;
+                deleteButton.title = 'Cannot delete the last remaining month';
+                deleteButton.style.opacity = '0.5';
+            } else {
+                deleteButton.disabled = false;
+                deleteButton.title = 'Delete current month (with confirmation)';
+                deleteButton.style.opacity = '1';
+            }
+        }
+
+        // Update expense breakdown grid
+        function updateExpenseBreakdown(expenses) {
+            const expenseGrid = document.getElementById('expenseGrid');
+            const expenseItems = [
+                { key: 'watchman', label: 'Watchman Salary', amount: expenses.watchman, class: 'watchman' },
+                { key: 'waste', label: 'Waste Management', amount: expenses.waste, class: 'waste' },
+                { key: 'electricity', label: 'Common Area Electricity', amount: expenses.electricity, class: 'electricity' },
+                { key: 'cleaning', label: 'Cleaning Material', amount: expenses.cleaning, class: 'cleaning' },
+                { key: 'water', label: 'Manjeera Water Bill', amount: expenses.water, class: 'water' },
+                { key: 'generator', label: 'Generator Fuel', amount: expenses.generator, class: 'generator' },
+                { key: 'softener', label: 'Softener Maintenance', amount: expenses.softener, class: 'softener' },
+                { key: 'misc', label: 'Miscellaneous', amount: expenses.misc, class: 'misc' }
+            ];
+
+            expenseGrid.innerHTML = expenseItems.map(item => `
+                <div class="expense-item ${item.class}">
+                    <span class="label">${item.label}</span>
+                    <span class="amount">₹${item.amount.toLocaleString()}</span>
+                </div>
+            `).join('');
+        }
+
+        // Destroy existing charts
+        function destroyCharts() {
+            try {
+                if (expenseChart) {
+                    expenseChart.destroy();
+                    expenseChart = null;
+                }
+                if (fundChart) {
+                    fundChart.destroy();
+                    fundChart = null;
+                }
+            } catch (error) {
+                console.log('Error destroying charts:', error);
+            }
+        }
+
+        // Create charts
+        function createCharts() {
+            try {
+                console.log('Creating charts...');
+                
+                // Destroy existing charts first
+                destroyCharts();
+                
+                const expenseCanvas = document.getElementById('expenseChart');
+                const fundCanvas = document.getElementById('fundChart');
+                
+                if (!expenseCanvas || !fundCanvas) {
+                    console.error('Canvas elements not found');
+                    return;
+                }
+
+                // Check if Chart is available
+                if (typeof Chart === 'undefined') {
+                    console.error('Chart.js not loaded');
+                    alert('Chart.js library failed to load. Please check your internet connection.');
+                    return;
+                }
+
+                console.log('Chart.js loaded successfully');
+
+                expenseChart = new Chart(expenseCanvas, {
+                    type: 'pie',
+                    data: {
+                        labels: [],
+                        datasets: [{
+                            data: [],
+                            backgroundColor: [
+                                '#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', 
+                                '#FFEAA7', '#DDA0DD', '#FF8C42', '#98D8C8'
+                            ],
+                            borderWidth: 2,
+                            borderColor: '#fff'
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'bottom',
+                                labels: {
+                                    padding: 20,
+                                    usePointStyle: true
+                                }
+                            }
+                        }
+                    }
+                });
+
+                fundChart = new Chart(fundCanvas, {
+                    type: 'pie',
+                    data: {
+                        labels: ['Expensed', 'Corpus Fund'],
+                        datasets: [{
+                            data: [],
+                            backgroundColor: ['#FF9800', '#2196F3'],
+                            borderWidth: 2,
+                            borderColor: '#fff'
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'bottom',
+                                labels: {
+                                    padding: 20,
+                                    usePointStyle: true
+                                }
+                            }
+                        }
+                    }
+                });
+
+                console.log('Charts created successfully');
+                
+            } catch (error) {
+                console.error('Error creating charts:', error);
+                alert('Error creating charts: ' + error.message);
+            }
+        }
+
+        // Update charts with current month data
+        function updateCharts() {
+            try {
+                if (!expenseChart || !fundChart) {
+                    console.log('Charts not initialized yet, skipping update');
+                    return;
+                }
+
+                const data = maintenanceData[currentMonth];
+                console.log('Updating charts for month:', currentMonth, 'with data:', data);
+                
+                // Update expense chart
+                const expenseLabels = [];
+                const expenseData = [];
+                const expenseColors = [];
+                
+                // Define color mapping for each expense type to match detailed breakdown
+                const colorMap = {
+                    watchman: '#FF6B6B',
+                    waste: '#4ECDC4',
+                    electricity: '#45B7D1',
+                    cleaning: '#96CEB4',
+                    water: '#FFEAA7',
+                    generator: '#DDA0DD',
+                    softener: '#FF8C42',
+                    misc: '#98D8C8'
+                };
+                
+                const labelMap = {
+                    watchman: 'Watchman Salary',
+                    waste: 'Waste Management',
+                    electricity: 'Common Area Electricity',
+                    cleaning: 'Cleaning Material',
+                    water: 'Manjeera Water Bill',
+                    generator: 'Generator Fuel',
+                    softener: 'Softener Maintenance',
+                    misc: 'Miscellaneous'
+                };
+                
+                Object.entries(data.expenses).forEach(([key, value]) => {
+                    if (value > 0) {
+                        expenseLabels.push(labelMap[key]);
+                        expenseData.push(value);
+                        expenseColors.push(colorMap[key]); // Use color from the map based on expense type
+                    }
+                });
+
+                console.log('Expense labels:', expenseLabels);
+                console.log('Expense data:', expenseData);
+                console.log('Expense colors:', expenseColors);
+
+                expenseChart.data.labels = expenseLabels;
+                expenseChart.data.datasets[0].data = expenseData;
+                expenseChart.data.datasets[0].backgroundColor = expenseColors;
+                expenseChart.update();
+
+                // Update fund chart - show expensed vs corpus fund
+                const fundData = [data.expensed, Math.abs(data.corpusFund)];
+                const fundColors = data.corpusFund < 0 ? ['#FF9800', '#F44336'] : ['#FF9800', '#2196F3'];
+                
+                console.log('Fund data:', fundData);
+                
+                fundChart.data.datasets[0].data = fundData;
+                fundChart.data.datasets[0].backgroundColor = fundColors;
+                fundChart.update();
+
+                console.log('Charts updated successfully');
+                
+            } catch (error) {
+                console.error('Error updating charts:', error);
+            }
+        }
+
+        // Change month
+        function changeMonth() {
+            currentMonth = document.getElementById('monthSelect').value;
+            updateDisplay();
+            // Auto-save when month changes
+            saveDataToStorage();
+        }
+
+        // Open add month modal
+        function openAddMonthModal() {
+            document.getElementById('addMonthModal').style.display = 'block';
+        }
+
+        // Close add month modal
+        function closeAddMonthModal() {
+            document.getElementById('addMonthModal').style.display = 'none';
+            document.getElementById('addMonthForm').reset();
+        }
+
+        // Open edit month modal
+        function openEditMonthModal() {
+            const data = maintenanceData[currentMonth];
+            if (!data) {
+                alert('No data found for the selected month.');
+                return;
+            }
+
+            // Populate the edit form with current data
+            document.getElementById('editMonth').value = currentMonth;
+            document.getElementById('editMaintenanceCollected').value = data.collected;
+            document.getElementById('editWatchmanSalary').value = data.expenses.watchman;
+            document.getElementById('editWasteManagement').value = data.expenses.waste;
+            document.getElementById('editCommonElectricity').value = data.expenses.electricity;
+            document.getElementById('editCleaningMaterial').value = data.expenses.cleaning;
+            document.getElementById('editWaterBill').value = data.expenses.water;
+            document.getElementById('editGeneratorFuel').value = data.expenses.generator;
+            document.getElementById('editSoftenerMaintenance').value = data.expenses.softener || 0;
+            document.getElementById('editMiscellaneous').value = data.expenses.misc;
+            document.getElementById('editComments').value = data.comments;
+
+            document.getElementById('editMonthModal').style.display = 'block';
+        }
+
+        // Close edit month modal
+        function closeEditMonthModal() {
+            document.getElementById('editMonthModal').style.display = 'none';
+            document.getElementById('editMonthForm').reset();
+        }
+
+        // Delete current month
+        function deleteCurrentMonth() {
+            const monthName = new Date(currentMonth + '-01').toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+            const data = maintenanceData[currentMonth];
+            
+            if (!data) {
+                alert('No data found for the selected month.');
+                return;
+            }
+
+            // Create confirmation dialog with month details
+            const confirmMessage = `Are you sure you want to delete ${monthName}?\n\nThis will permanently remove:\n• Maintenance Collected: ₹${data.collected.toLocaleString()}\n• Maintenance Expensed: ₹${data.expensed.toLocaleString()}\n• Corpus Fund: ₹${data.corpusFund.toLocaleString()}\n• All expense details\n• Comments\n\nThis action cannot be undone!`;
+            
+            if (confirm(confirmMessage)) {
+                // Double confirmation for safety
+                const doubleConfirm = confirm(`⚠️ FINAL CONFIRMATION ⚠️\n\nYou are about to permanently delete ${monthName}.\n\nType "DELETE" in the next prompt to confirm.`);
+                
+                if (doubleConfirm) {
+                    const finalConfirm = prompt(`Type "DELETE" to confirm deletion of ${monthName}:`);
+                    
+                    if (finalConfirm === 'DELETE') {
+                        // Delete the month data
+                        delete maintenanceData[currentMonth];
+                        
+                        // Save to localStorage
+                        saveDataToStorage();
+                        
+                        // Update month dropdown
+                        updateMonthDropdown();
+                        
+                        // Switch to first available month
+                        const availableMonths = Object.keys(maintenanceData).sort();
+                        if (availableMonths.length > 0) {
+                            currentMonth = availableMonths[0];
+                            document.getElementById('monthSelect').value = currentMonth;
+                            updateDisplay();
+                        } else {
+                            // No months left, show empty state
+                            currentMonth = null;
+                            clearDisplay();
+                        }
+                        
+                        alert(`${monthName} has been permanently deleted.`);
+                    } else {
+                        alert('Deletion cancelled. Month data is safe.');
+                    }
+                } else {
+                    alert('Deletion cancelled. Month data is safe.');
+                }
+            } else {
+                alert('Deletion cancelled. Month data is safe.');
+            }
+        }
+
+        // Clear display when no months are available
+        function clearDisplay() {
+            document.getElementById('collectedAmount').textContent = '₹0';
+            document.getElementById('expensedAmount').textContent = '₹0';
+            document.getElementById('balanceAmount').textContent = '₹0';
+            
+            document.getElementById('expenseGrid').innerHTML = '<div class="expense-item"><span class="label">No data available</span><span class="amount">-</span></div>';
+            document.getElementById('commentsText').textContent = 'No months available. Add a new month to get started.';
+            
+            // Clear charts
+            if (expenseChart) {
+                expenseChart.data.labels = [];
+                expenseChart.data.datasets[0].data = [];
+                expenseChart.update();
+            }
+            
+            if (fundChart) {
+                fundChart.data.datasets[0].data = [];
+                fundChart.update();
+            }
+            
+            // Update delete button state
+            updateDeleteButtonState();
+        }
+
+        // Add new month
+        document.getElementById('addMonthForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const month = document.getElementById('newMonth').value;
+            const collected = parseInt(document.getElementById('maintenanceCollected').value);
+            const watchman = parseInt(document.getElementById('watchmanSalary').value);
+            const waste = parseInt(document.getElementById('wasteManagement').value);
+            const electricity = parseInt(document.getElementById('commonElectricity').value);
+            const cleaning = parseInt(document.getElementById('cleaningMaterial').value);
+            const water = parseInt(document.getElementById('waterBill').value);
+            const generator = parseInt(document.getElementById('generatorFuel').value) || 0;
+            const softener = parseInt(document.getElementById('softenerMaintenance').value) || 0;
+            const misc = parseInt(document.getElementById('miscellaneous').value) || 0;
+            const comments = document.getElementById('comments').value || 'No comments';
+
+            const expensed = watchman + waste + electricity + cleaning + water + generator + softener + misc;
+            const balance = collected - expensed;
+            
+            // Calculate corpus fund (carry forward from previous month)
+            const sortedMonths = Object.keys(maintenanceData).sort();
+            const previousMonth = sortedMonths[sortedMonths.length - 1];
+            const previousCorpusFund = previousMonth ? maintenanceData[previousMonth].corpusFund : 0;
+            const corpusFund = previousCorpusFund + balance;
+
+            // Add to data
+            maintenanceData[month] = {
+                collected: collected,
+                expensed: expensed,
+                balance: balance,
+                corpusFund: corpusFund,
+                expenses: {
+                    watchman: watchman,
+                    waste: waste,
+                    electricity: electricity,
+                    cleaning: cleaning,
+                    water: water,
+                    generator: generator,
+                    softener: softener,
+                    misc: misc
+                },
+                comments: comments
+            };
+
+            // Add to select dropdown
+            const monthSelect = document.getElementById('monthSelect');
+            const option = document.createElement('option');
+            option.value = month;
+            option.textContent = new Date(month + '-01').toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+            monthSelect.appendChild(option);
+
+            // Switch to new month
+            currentMonth = month;
+            monthSelect.value = month;
+            
+            // Update month dropdown
+            updateMonthDropdown();
+            
+            // Update display
+            updateDisplay();
+            
+            // Save data to localStorage
+            saveDataToStorage();
+            
+            // Close modal
+            closeAddMonthModal();
+            
+            alert('New month added successfully!');
+        });
+
+        // Edit existing month
+        document.getElementById('editMonthForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const month = document.getElementById('editMonth').value;
+            const collected = parseInt(document.getElementById('editMaintenanceCollected').value);
+            const watchman = parseInt(document.getElementById('editWatchmanSalary').value);
+            const waste = parseInt(document.getElementById('editWasteManagement').value);
+            const electricity = parseInt(document.getElementById('editCommonElectricity').value);
+            const cleaning = parseInt(document.getElementById('editCleaningMaterial').value);
+            const water = parseInt(document.getElementById('editWaterBill').value);
+            const generator = parseInt(document.getElementById('editGeneratorFuel').value) || 0;
+            const softener = parseInt(document.getElementById('editSoftenerMaintenance').value) || 0;
+            const misc = parseInt(document.getElementById('editMiscellaneous').value) || 0;
+            const comments = document.getElementById('editComments').value || 'No comments';
+
+            const expensed = watchman + waste + electricity + cleaning + water + generator + softener + misc;
+            const balance = collected - expensed;
+            
+            // Calculate corpus fund (carry forward from previous month)
+            const sortedMonths = Object.keys(maintenanceData).sort();
+            const currentIndex = sortedMonths.indexOf(month);
+            const previousMonth = currentIndex > 0 ? sortedMonths[currentIndex - 1] : null;
+            const previousCorpusFund = previousMonth ? maintenanceData[previousMonth].corpusFund : 0;
+            const corpusFund = previousCorpusFund + balance;
+
+            // Update the data
+            maintenanceData[month] = {
+                collected: collected,
+                expensed: expensed,
+                balance: balance,
+                corpusFund: corpusFund,
+                expenses: {
+                    watchman: watchman,
+                    waste: waste,
+                    electricity: electricity,
+                    cleaning: cleaning,
+                    water: water,
+                    generator: generator,
+                    softener: softener,
+                    misc: misc
+                },
+                comments: comments
+            };
+
+            // Update display
+            updateDisplay();
+            
+            // Save data to localStorage
+            saveDataToStorage();
+            
+            // Close modal
+            closeEditMonthModal();
+            
+            alert('Month data updated successfully!');
+        });
+
+        // Close modal when clicking outside
+        window.onclick = function(event) {
+            const addModal = document.getElementById('addMonthModal');
+            const editModal = document.getElementById('editMonthModal');
+            
+            if (event.target === addModal) {
+                closeAddMonthModal();
+            }
+            if (event.target === editModal) {
+                closeEditMonthModal();
+            }
+        }
+
+        // Export to PDF functionality - Capture entire page as-is
+        async function exportToPDF() {
+            try {
+                console.log('Starting PDF export...');
+                
+                // Check if required libraries are available
+                if (typeof window.jspdf === 'undefined' || typeof html2canvas === 'undefined') {
+                    alert('Required libraries not loaded. Please check your internet connection.');
+                    return;
+                }
+
+                const { jsPDF } = window.jspdf;
+                
+                // Store original button state
+                const exportButton = document.querySelector('.export-pdf-btn');
+                const originalButtonText = exportButton.textContent;
+                const originalButtonDisabled = exportButton.disabled;
+                
+                // Temporarily hide the button during capture to avoid showing loading state in PDF
+                exportButton.style.display = 'none';
+                
+                // Capture the entire main content area
+                const mainContent = document.querySelector('.main-content');
+                if (!mainContent) {
+                    throw new Error('Main content area not found');
+                }
+                
+                console.log('Capturing page content...');
+                
+                // Apply PDF-specific styling
+                mainContent.classList.add('pdf-export');
+                
+                // Wait a moment for styles to apply
+                await new Promise(resolve => setTimeout(resolve, 100));
+                
+                // Use html2canvas to capture the entire page
+                const canvas = await html2canvas(mainContent, {
+                    backgroundColor: '#ffffff',
+                    scale: 2, // Higher resolution
+                    useCORS: true,
+                    allowTaint: true,
+                    scrollX: 0,
+                    scrollY: 0,
+                    width: mainContent.scrollWidth,
+                    height: mainContent.scrollHeight,
+                    logging: false, // Disable console logging
+                    removeContainer: false
+                });
+                
+                // Remove PDF-specific styling
+                mainContent.classList.remove('pdf-export');
+                
+                console.log('Canvas captured, creating PDF...');
+                
+                // Get canvas dimensions
+                const imgWidth = canvas.width;
+                const imgHeight = canvas.height;
+                
+                // Calculate PDF dimensions (A4 size in mm)
+                const pdfWidth = 210; // A4 width in mm
+                const pdfHeight = 297; // A4 height in mm
+                
+                // Calculate scaling to fit content
+                const scale = Math.min(pdfWidth / (imgWidth * 0.264583), pdfHeight / (imgHeight * 0.264583));
+                const scaledWidth = imgWidth * 0.264583 * scale;
+                const scaledHeight = imgHeight * 0.264583 * scale;
+                
+                // Create PDF
+                const doc = new jsPDF('p', 'mm', 'a4');
+                
+                // Add the captured image to PDF
+                const imgData = canvas.toDataURL('image/png', 1.0);
+                doc.addImage(imgData, 'PNG', 0, 0, scaledWidth, scaledHeight);
+                
+                // Add header page if content is too long
+                if (scaledHeight > pdfHeight) {
+                    // Create a new page for header
+                    const headerDoc = new jsPDF('p', 'mm', 'a4');
+                    
+                    // Add header information
+                    const monthName = new Date(currentMonth + '-01').toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+                    
+                    headerDoc.setFontSize(20);
+                    headerDoc.setTextColor(40);
+                    headerDoc.text('Rainbow Homes', 105, 30, { align: 'center' });
+                    
+                    headerDoc.setFontSize(16);
+                    headerDoc.text('Apartment Maintenance Report', 105, 40, { align: 'center' });
+                    
+                    headerDoc.setFontSize(14);
+                    headerDoc.text(`${monthName}`, 105, 50, { align: 'center' });
+                    
+                    // Add line separator
+                    headerDoc.setLineWidth(0.5);
+                    headerDoc.line(20, 55, 190, 55);
+                    
+                    // Add generation info
+                    headerDoc.setFontSize(10);
+                    headerDoc.text(`Generated on: ${new Date().toLocaleDateString()}`, 20, 280);
+                    headerDoc.text('Rainbow Homes Maintenance Tracker', 105, 280, { align: 'center' });
+                    
+                    // Combine header and content
+                    const finalDoc = new jsPDF('p', 'mm', 'a4');
+                    
+                    // Add header page
+                    const headerData = headerDoc.output('datauristring');
+                    finalDoc.addPage();
+                    finalDoc.addImage(headerData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+                    
+                    // Add content page
+                    finalDoc.addPage();
+                    finalDoc.addImage(imgData, 'PNG', 0, 0, scaledWidth, scaledHeight);
+                    
+                    // Save the final PDF
+                    const fileName = `Rainbow_Homes_Report_${currentMonth}_${new Date().getFullYear()}.pdf`;
+                    finalDoc.save(fileName);
+                } else {
+                    // Content fits in one page, save directly
+                    const fileName = `Rainbow_Homes_Report_${currentMonth}_${new Date().getFullYear()}.pdf`;
+                    doc.save(fileName);
+                }
+                
+                console.log('PDF exported successfully');
+                
+                // Restore button
+                exportButton.style.display = '';
+                exportButton.textContent = originalButtonText;
+                exportButton.disabled = originalButtonDisabled;
+                
+            } catch (error) {
+                console.error('Error exporting PDF:', error);
+                alert('Error creating PDF: ' + error.message);
+                
+                // Restore button on error
+                const exportButton = document.querySelector('.export-pdf-btn');
+                exportButton.style.display = '';
+                exportButton.textContent = '📄 Export PDF Report';
+                exportButton.disabled = false;
+            }
+        }
+
+        // Alternative PDF export with html2canvas for better chart quality
+        async function exportToPDFWithCanvas() {
+            try {
+                console.log('Starting PDF export with canvas...');
+                
+                if (typeof window.jspdf === 'undefined' || typeof html2canvas === 'undefined') {
+                    alert('Required libraries not loaded. Please check your internet connection.');
+                    return;
+                }
+
+                const { jsPDF } = window.jspdf;
+                const doc = new jsPDF('p', 'mm', 'a4');
+                
+                // Get current month data
+                const data = maintenanceData[currentMonth];
+                const monthName = new Date(currentMonth + '-01').toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+                
+                // PDF Header
+                doc.setFontSize(20);
+                doc.setTextColor(40);
+                doc.text('Rainbow Homes', 105, 20, { align: 'center' });
+                
+                doc.setFontSize(16);
+                doc.text('Apartment Maintenance Report', 105, 30, { align: 'center' });
+                
+                doc.setFontSize(14);
+                doc.text(`${monthName}`, 105, 40, { align: 'center' });
+                
+                // Add line separator
+                doc.setLineWidth(0.5);
+                doc.line(20, 45, 190, 45);
+                
+                // Summary Section
+                doc.setFontSize(12);
+                doc.text('SUMMARY', 20, 55);
+                
+                doc.setFontSize(10);
+                doc.text(`Maintenance Collected: ₹${data.collected.toLocaleString()}`, 20, 65);
+                doc.text(`Maintenance Expensed: ₹${data.expensed.toLocaleString()}`, 20, 72);
+                doc.text(`Corpus Fund: ₹${data.corpusFund.toLocaleString()}`, 20, 79);
+                
+                // Expense Breakdown Section
+                doc.setFontSize(12);
+                doc.text('EXPENSE BREAKDOWN', 20, 95);
+                
+                let yPos = 105;
+                Object.entries(data.expenses).forEach(([key, value]) => {
+                    if (value > 0) {
+                        const labels = {
+                            watchman: 'Watchman Salary',
+                            waste: 'Waste Management',
+                            electricity: 'Common Area Electricity',
+                            cleaning: 'Cleaning Material',
+                            water: 'Manjeera Water Bill',
+                            generator: 'Generator Fuel',
+                            softener: 'Softener Maintenance',
+                            misc: 'Miscellaneous'
+                        };
+                        doc.text(`${labels[key]}: ₹${value.toLocaleString()}`, 20, yPos);
+                        yPos += 7;
+                    }
+                });
+                
+                // Comments Section
+                if (data.comments) {
+                    doc.setFontSize(12);
+                    doc.text('COMMENTS', 20, yPos + 10);
+                    
+                    doc.setFontSize(10);
+                    const comments = data.comments;
+                    const splitComments = doc.splitTextToSize(comments, 170);
+                    doc.text(splitComments, 20, yPos + 20);
+                }
+                
+                // Capture charts using html2canvas for better quality
+                try {
+                    // Capture expense chart
+                    const expenseChartCard = document.querySelector('.chart-card:first-child');
+                    if (expenseChartCard) {
+                        const canvas = await html2canvas(expenseChartCard, {
+                            backgroundColor: '#ffffff',
+                            scale: 2
+                        });
+                        const imgData = canvas.toDataURL('image/png');
+                        doc.addImage(imgData, 'PNG', 20, yPos + 40, 80, 60);
+                    }
+                    
+                    // Capture fund chart
+                    const fundChartCard = document.querySelector('.chart-card:last-child');
+                    if (fundChartCard) {
+                        const canvas = await html2canvas(fundChartCard, {
+                            backgroundColor: '#ffffff',
+                            scale: 2
+                        });
+                        const imgData = canvas.toDataURL('image/png');
+                        doc.addImage(imgData, 'PNG', 110, yPos + 40, 80, 60);
+                    }
+                } catch (chartError) {
+                    console.log('Chart capture failed:', chartError);
+                    doc.text('Charts could not be included in PDF', 20, yPos + 40);
+                }
+                
+                // Footer
+                const pageHeight = doc.internal.pageSize.height;
+                doc.setFontSize(8);
+                doc.text(`Generated on: ${new Date().toLocaleDateString()}`, 20, pageHeight - 10);
+                doc.text('Rainbow Homes Maintenance Tracker', 105, pageHeight - 10, { align: 'center' });
+                
+                // Save the PDF
+                const fileName = `Rainbow_Homes_Report_${currentMonth}_${new Date().getFullYear()}.pdf`;
+                doc.save(fileName);
+                
+                console.log('PDF exported successfully');
+                
+            } catch (error) {
+                console.error('Error exporting PDF:', error);
+                alert('Error creating PDF: ' + error.message);
+            }
+        }
+
+        // Handle textarea key events for Enter/Shift+Enter
+        function handleTextareaKeydown(event, formId) {
+            if (event.key === 'Enter') {
+                if (event.shiftKey) {
+                    // Shift+Enter: Allow default behavior (new line)
+                    return;
+                } else {
+                    // Enter: Submit the form
+                    event.preventDefault();
+                    document.getElementById(formId).submit();
+                }
+            }
+        }
+
+        // Initialize the application when DOM is loaded
+        function initializeApp() {
+            console.log('Initializing application...');
+            
+            // Load saved data first
+            loadDataFromStorage();
+            
+            // Update month dropdown with all available months
+            updateMonthDropdown();
+            
+            // Wait for Chart.js to be available, then initialize
+            function waitForChartJS() {
+                if (typeof Chart !== 'undefined') {
+                    console.log('Chart.js is available, initializing...');
+                    // Small delay to ensure everything is ready
+                    setTimeout(function() {
+                        init();
+                    }, 100);
+                } else {
+                    console.log('Waiting for Chart.js...');
+                    setTimeout(waitForChartJS, 100);
+                }
+            }
+            
+            waitForChartJS();
+            
+            // Add event listeners for textarea keydown events
+            setTimeout(function() {
+                const commentsTextarea = document.getElementById('comments');
+                const editCommentsTextarea = document.getElementById('editComments');
+                
+                if (commentsTextarea) {
+                    commentsTextarea.addEventListener('keydown', function(event) {
+                        handleTextareaKeydown(event, 'addMonthForm');
+                    });
+                }
+                
+                if (editCommentsTextarea) {
+                    editCommentsTextarea.addEventListener('keydown', function(event) {
+                        handleTextareaKeydown(event, 'editMonthForm');
+                    });
+                }
+            }, 200);
+        }
+
+        // Initialize when DOM is ready
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initializeApp);
+        } else {
+            initializeApp();
+        }
+    </script>
+</body>
+</html>
