@@ -3,854 +3,748 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
-    <title>Rainbow Homes - Apartment Maintenance Tracker</title>
+    <meta name="theme-color" content="#f5f2eb">
+    <title>Rainbow Homes — Maintenance</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700;800&family=Poppins:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700;800&display=swap');
-        
-        * {
+        @import url('https://fonts.googleapis.com/css2?family=Nunito:ital,wght@0,400;0,500;0,600;0,700;0,800;1,600&display=swap');
+
+        *, *::before, *::after {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
         }
 
         :root {
-            --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            --secondary-gradient: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
-            --card-shadow: 0 10px 40px rgba(0,0,0,0.1);
-            --card-hover-shadow: 0 20px 60px rgba(0,0,0,0.15);
-            --transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            --bg-page: #f5f2eb;
+            --bg-card: #ffffff;
+            --bg-soft: #faf8f4;
+            --text: #2c3d35;
+            --text-muted: #5c6b63;
+            --border: rgba(44, 61, 53, 0.1);
+            --accent-green: #3d7a5f;
+            --accent-sage: #7aab8e;
+            --accent-honey: #c9a227;
+            --accent-sky: #4a8fb8;
+            --accent-coral: #c75c5c;
+            --shadow-soft: 0 4px 24px rgba(44, 61, 53, 0.08);
+            --shadow-card: 0 8px 32px rgba(44, 61, 53, 0.06);
+            --radius-lg: 20px;
+            --radius-md: 14px;
+            --radius-sm: 10px;
+            --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+        }
+
+        html {
+            scroll-behavior: smooth;
+            -webkit-text-size-adjust: 100%;
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            html { scroll-behavior: auto; }
+            *, *::before, *::after {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+            }
         }
 
         body {
-            font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: var(--primary-gradient);
+            font-family: 'Nunito', system-ui, sans-serif;
+            background: var(--bg-page);
+            color: var(--text);
             min-height: 100vh;
-            padding: 20px;
-            animation: fadeIn 0.8s ease-in;
-            position: relative;
+            line-height: 1.55;
             overflow-x: hidden;
+            -webkit-tap-highlight-color: transparent;
         }
 
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
-        }
-
-        /* Animated background lines */
-        body::before {
-            content: '';
+        /* Gentle animated background — society / home feel */
+        .bg-live {
             position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-image: 
-                linear-gradient(45deg, rgba(255,255,255,0.05) 25%, transparent 25%),
-                linear-gradient(-45deg, rgba(255,255,255,0.05) 25%, transparent 25%),
-                linear-gradient(45deg, transparent 75%, rgba(255,255,255,0.05) 75%),
-                linear-gradient(-45deg, transparent 75%, rgba(255,255,255,0.05) 75%);
-            background-size: 60px 60px;
-            background-position: 0 0, 0 30px, 30px -30px, -30px 0px;
-            animation: slideLines 20s linear infinite;
-            pointer-events: none;
+            inset: 0;
             z-index: 0;
-        }
-
-        @keyframes slideLines {
-            0% { background-position: 0 0, 0 30px, 30px -30px, -30px 0px; }
-            100% { background-position: 60px 60px, 60px 90px, 90px 30px, 30px 60px; }
-        }
-
-        /* Additional animated lines overlay */
-        body::after {
-            content: '';
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-image: 
-                repeating-linear-gradient(
-                    0deg,
-                    transparent,
-                    transparent 2px,
-                    rgba(255,255,255,0.03) 2px,
-                    rgba(255,255,255,0.03) 4px
-                ),
-                repeating-linear-gradient(
-                    90deg,
-                    transparent,
-                    transparent 2px,
-                    rgba(255,255,255,0.03) 2px,
-                    rgba(255,255,255,0.03) 4px
-                );
-            animation: pulseLines 4s ease-in-out infinite;
             pointer-events: none;
-            z-index: 0;
-        }
-
-        @keyframes pulseLines {
-            0%, 100% { opacity: 0.5; }
-            50% { opacity: 0.8; }
-        }
-
-        .container {
-            max-width: 1400px;
-            margin: 0 auto;
-            background: white;
-            border-radius: 24px;
-            box-shadow: var(--card-shadow);
             overflow: hidden;
+            background: var(--bg-page);
+        }
+
+        .bg-live__gradient {
+            position: absolute;
+            inset: -20%;
+            background:
+                radial-gradient(ellipse 80% 60% at 20% 30%, rgba(122, 171, 142, 0.22), transparent 55%),
+                radial-gradient(ellipse 70% 50% at 85% 20%, rgba(201, 162, 39, 0.12), transparent 50%),
+                radial-gradient(ellipse 60% 45% at 50% 95%, rgba(74, 143, 184, 0.14), transparent 45%);
+            animation: bg-breathe 18s ease-in-out infinite alternate;
+        }
+
+        @keyframes bg-breathe {
+            0% { opacity: 0.85; transform: scale(1) translate(0, 0); }
+            100% { opacity: 1; transform: scale(1.05) translate(2%, -1%); }
+        }
+
+        .bg-live__blob {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(48px);
+            opacity: 0.55;
+        }
+
+        .bg-live__blob--a {
+            width: min(52vw, 420px);
+            height: min(52vw, 420px);
+            background: rgba(122, 171, 142, 0.45);
+            top: -8%;
+            left: -12%;
+            animation: float-a 24s ease-in-out infinite;
+        }
+
+        .bg-live__blob--b {
+            width: min(48vw, 380px);
+            height: min(48vw, 380px);
+            background: rgba(201, 162, 39, 0.2);
+            top: 35%;
+            right: -15%;
+            animation: float-b 28s ease-in-out infinite;
+        }
+
+        .bg-live__blob--c {
+            width: min(55vw, 440px);
+            height: min(55vw, 440px);
+            background: rgba(74, 143, 184, 0.22);
+            bottom: -12%;
+            left: 20%;
+            animation: float-c 32s ease-in-out infinite;
+        }
+
+        @keyframes float-a {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            40% { transform: translate(6vw, 8vh) scale(1.06); }
+            70% { transform: translate(3vw, -4vh) scale(0.96); }
+        }
+
+        @keyframes float-b {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            50% { transform: translate(-8vw, 6vh) scale(1.05); }
+        }
+
+        @keyframes float-c {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            33% { transform: translate(-5vw, -6vh) scale(1.04); }
+            66% { transform: translate(7vw, 4vh) scale(0.98); }
+        }
+
+        .bg-live__shapes {
+            position: absolute;
+            inset: 0;
+            opacity: 0.4;
+            background-image:
+                repeating-linear-gradient(
+                    105deg,
+                    transparent,
+                    transparent 48px,
+                    rgba(61, 122, 95, 0.04) 48px,
+                    rgba(61, 122, 95, 0.04) 49px
+                );
+            background-size: 120% 120%;
+            animation: lines-drift 80s linear infinite;
+        }
+
+        @keyframes lines-drift {
+            0% { background-position: 0 0; }
+            100% { background-position: 100% 100%; }
+        }
+
+        .bg-live__sparkle {
+            position: absolute;
+            inset: 0;
+            background-image: radial-gradient(circle at 20% 30%, rgba(255, 255, 255, 0.15) 0%, transparent 2px),
+                radial-gradient(circle at 78% 60%, rgba(255, 255, 255, 0.12) 0%, transparent 2px),
+                radial-gradient(circle at 45% 85%, rgba(255, 255, 255, 0.1) 0%, transparent 2px),
+                radial-gradient(circle at 90% 15%, rgba(255, 255, 255, 0.08) 0%, transparent 2px);
+            background-size: 100% 100%;
+            animation: sparkle-shift 45s ease-in-out infinite alternate;
+        }
+
+        @keyframes sparkle-shift {
+            0% { opacity: 0.35; transform: translate(0, 0); }
+            100% { opacity: 0.55; transform: translate(-2%, 1%); }
+        }
+
+        /* Animated line layers */
+        .bg-live__lines-slant {
+            position: absolute;
+            inset: -60%;
+            width: 220%;
+            height: 220%;
+            background-image: repeating-linear-gradient(
+                125deg,
+                transparent,
+                transparent 34px,
+                rgba(61, 122, 95, 0.09) 34px,
+                rgba(61, 122, 95, 0.09) 35px
+            );
+            animation: lines-marquee-a 45s linear infinite;
+            opacity: 0.85;
+        }
+
+        @keyframes lines-marquee-a {
+            0% { transform: translate(0, 0); }
+            100% { transform: translate(56px, 56px); }
+        }
+
+        .bg-live__lines-slant-reverse {
+            position: absolute;
+            inset: -60%;
+            width: 220%;
+            height: 220%;
+            background-image: repeating-linear-gradient(
+                -35deg,
+                transparent,
+                transparent 42px,
+                rgba(74, 143, 184, 0.07) 42px,
+                rgba(74, 143, 184, 0.07) 43px
+            );
+            animation: lines-marquee-b 60s linear infinite;
+            opacity: 0.75;
+        }
+
+        @keyframes lines-marquee-b {
+            0% { transform: translate(0, 0); }
+            100% { transform: translate(-48px, 48px); }
+        }
+
+        .bg-live__lines-horizontal {
+            position: absolute;
+            inset: 0;
+            background-image: repeating-linear-gradient(
+                180deg,
+                transparent,
+                transparent 31px,
+                rgba(122, 171, 142, 0.06) 31px,
+                rgba(122, 171, 142, 0.06) 32px
+            );
+            background-size: 100% 32px;
+            animation: lines-rise 28s linear infinite;
+            opacity: 0.6;
+            mask-image: linear-gradient(to bottom, transparent 0%, black 18%, black 82%, transparent 100%);
+            -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 18%, black 82%, transparent 100%);
+        }
+
+        @keyframes lines-rise {
+            0% { background-position: 0 0; }
+            100% { background-position: 0 32px; }
+        }
+
+        .bg-live__svg-lines {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0.35;
+        }
+
+        .bg-live__svg-lines path {
+            fill: none;
+            stroke: rgba(61, 122, 95, 0.35);
+            stroke-width: 1;
+            stroke-linecap: round;
+            stroke-dasharray: 14 22;
+            animation: dash-flow 22s linear infinite;
+        }
+
+        .bg-live__svg-lines path:nth-child(2) {
+            stroke: rgba(74, 143, 184, 0.3);
+            stroke-dasharray: 20 18;
+            animation-duration: 32s;
+            animation-direction: reverse;
+        }
+
+        .bg-live__svg-lines path:nth-child(3) {
+            stroke: rgba(201, 162, 39, 0.22);
+            stroke-dasharray: 10 28;
+            animation-duration: 26s;
+        }
+
+        @keyframes dash-flow {
+            to { stroke-dashoffset: -360; }
+        }
+
+        .page-wrap {
             position: relative;
             z-index: 1;
-            animation: slideUp 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+            max-width: 1120px;
+            margin: 0 auto;
+            padding: clamp(12px, 3vw, 28px);
+            padding-bottom: 40px;
         }
 
-        @keyframes slideUp {
+        /* Hero */
+        .hero {
+            position: relative;
+            border-radius: calc(var(--radius-lg) + 6px);
+            overflow: hidden;
+            margin-bottom: clamp(18px, 3vw, 28px);
+            min-height: clamp(180px, 36vw, 300px);
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow-card);
+            animation: hero-in 0.9s var(--ease-out) both;
+        }
+
+        @keyframes hero-in {
             from {
                 opacity: 0;
-                transform: translateY(30px);
+                transform: translateY(16px) scale(0.98);
             }
             to {
                 opacity: 1;
-                transform: translateY(0);
+                transform: translateY(0) scale(1);
             }
         }
 
-        .header {
-            background: var(--secondary-gradient);
-            color: white;
-            padding: 80px 30px;
-            text-align: center;
-            position: relative;
-            overflow: hidden;
+        .hero__media {
+            position: absolute;
+            inset: 0;
             background-image: url('assets/WhatsApp_Image_2026-02-02_at_4.00.03_PM-948e2f35-0afc-47b9-babe-126a1db45e2d.png');
             background-size: cover;
             background-position: center;
-            background-repeat: no-repeat;
+            transform: scale(1.02);
         }
 
-        .header::before {
-            content: '';
+        .hero__overlay {
             position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(135deg, rgba(79, 172, 254, 0.75) 0%, rgba(0, 242, 254, 0.75) 100%);
-            z-index: 0;
+            inset: 0;
+            background:
+                linear-gradient(135deg, rgba(245, 242, 235, 0.92) 0%, rgba(245, 242, 235, 0.45) 42%, rgba(250, 248, 244, 0.55) 100%),
+                linear-gradient(180deg, transparent 35%, rgba(245, 242, 235, 0.88) 100%);
         }
 
-        .header::after {
-            content: '';
-            position: absolute;
-            top: -50%;
-            left: -50%;
-            width: 200%;
-            height: 200%;
-            background: radial-gradient(circle, rgba(255,255,255,0.15) 0%, transparent 70%);
-            animation: rotate 20s linear infinite;
-            z-index: 1;
+        .hero__content {
+            position: relative;
+            z-index: 2;
+            padding: clamp(28px, 6vw, 56px);
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            min-height: inherit;
         }
 
-        @keyframes rotate {
-            from { transform: rotate(0deg); }
-            to { transform: rotate(360deg); }
-        }
-
-        .header h1 {
-            font-family: 'Playfair Display', serif;
-            font-size: 3.5em;
-            margin-bottom: 15px;
-            text-shadow: 3px 3px 12px rgba(0,0,0,0.4), 0 0 30px rgba(255,255,255,0.3);
+        /* Logo-style site title — larger than tagline */
+        .hero__logo {
+            font-family: 'Nunito', sans-serif;
             font-weight: 800;
-            position: relative;
-            z-index: 2;
-            animation: scaleIn 0.6s ease-out 0.2s both;
-            letter-spacing: 2px;
+            font-size: clamp(2.35rem, 8.5vw, 4.5rem);
+            letter-spacing: -0.035em;
+            line-height: 1.02;
+            margin: 0 0 8px;
+            color: var(--text);
         }
 
-        @keyframes scaleIn {
-            from {
-                opacity: 0;
-                transform: scale(0.9);
-            }
-            to {
-                opacity: 1;
-                transform: scale(1);
-            }
+        .hero__tagline {
+            font-size: clamp(1.05rem, 2.8vw, 1.5rem);
+            font-weight: 700;
+            letter-spacing: -0.015em;
+            line-height: 1.3;
+            color: var(--accent-green);
+            margin: 0 0 12px;
         }
 
-        .header p {
-            font-family: 'Poppins', sans-serif;
-            font-size: 1.4em;
-            opacity: 0.95;
-            font-weight: 400;
-            position: relative;
-            z-index: 2;
-            animation: fadeInUp 0.6s ease-out 0.4s both;
-            letter-spacing: 1px;
+        .hero__desc {
+            font-size: clamp(0.95rem, 2.4vw, 1.0625rem);
+            color: var(--text-muted);
+            max-width: 42ch;
+            font-weight: 500;
+            margin: 0;
+        }
+
+        /* Toolbar */
+        .toolbar {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: flex-end;
+            gap: 12px;
+            margin-bottom: 22px;
+            animation: fade-up 0.7s var(--ease-out) 0.1s both;
+        }
+
+        @keyframes fade-up {
+            from { opacity: 0; transform: translateY(12px); }
+            to { opacity: 1; transform: translateY(0); }
         }
 
         @keyframes fadeInUp {
-            from {
-                opacity: 0;
-                transform: translateY(20px);
-            }
-            to {
-                opacity: 0.95;
-                transform: translateY(0);
-            }
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
         }
 
-        .main-content {
-            padding: 40px;
-            background: white;
-            min-height: calc(100vh - 200px);
+        .toolbar label {
+            font-size: 0.875rem;
+            font-weight: 700;
+            color: var(--text);
+            letter-spacing: 0.01em;
         }
 
-        .controls {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 40px;
-            flex-wrap: wrap;
-            gap: 20px;
-            animation: fadeIn 0.8s ease-out 0.6s both;
-        }
-
-        .month-selector {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            flex: 1;
-            min-width: 250px;
-        }
-
-        .month-selector label {
-            font-weight: 600;
-            color: #333;
-            font-size: 16px;
-        }
-
-        .month-selector select {
-            padding: 12px 20px;
-            border: 2px solid #e0e0e0;
-            border-radius: 12px;
-            font-size: 16px;
-            background: white;
-            cursor: pointer;
-            transition: var(--transition);
-            font-weight: 500;
-            flex: 1;
-            max-width: 300px;
-            appearance: none;
-            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23667eea' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
-            background-repeat: no-repeat;
-            background-position: right 15px center;
-            padding-right: 45px;
-        }
-
-        .month-selector select:focus {
-            outline: none;
-            border-color: #667eea;
-            box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
-            transform: translateY(-2px);
-        }
-
-        .month-selector select:hover {
-            border-color: #667eea;
-        }
-
-        .action-buttons {
-            display: flex;
-            gap: 12px;
-            align-items: center;
-            flex-wrap: wrap;
-        }
-
-
-        .summary-cards {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 25px;
-            margin-bottom: 40px;
-            animation: fadeInUp 0.8s ease-out 0.8s both;
-        }
-
-        .card {
-            background: white;
-            border-radius: 20px;
-            padding: 30px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
-            border-left: 6px solid;
-            transition: var(--transition);
+        .select-wrap {
             position: relative;
-            overflow: hidden;
-            -webkit-backface-visibility: hidden;
-            backface-visibility: hidden;
-            -webkit-perspective: 1000px;
-            perspective: 1000px;
+            display: inline-flex;
+            align-items: center;
         }
 
-        .card::before {
+        .select-wrap select {
+            appearance: none;
+            font-family: inherit;
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--text);
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            padding: 14px 48px 14px 18px;
+            min-width: min(100%, 300px);
+            cursor: pointer;
+            box-shadow: var(--shadow-soft);
+            transition: border-color 0.25s var(--ease-out), box-shadow 0.25s var(--ease-out);
+        }
+
+        .select-wrap select:hover {
+            border-color: rgba(61, 122, 95, 0.35);
+        }
+
+        .select-wrap select:focus {
+            outline: none;
+            border-color: var(--accent-green);
+            box-shadow: 0 0 0 3px rgba(61, 122, 95, 0.15);
+        }
+
+        .select-wrap::after {
             content: '';
             position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, transparent 100%);
-            opacity: 0;
-            transition: var(--transition);
+            right: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 0;
+            height: 0;
+            border-left: 5px solid transparent;
+            border-right: 5px solid transparent;
+            border-top: 6px solid var(--accent-green);
+            pointer-events: none;
         }
 
-        .card:hover {
-            transform: translateY(-8px) scale(1.02);
-            box-shadow: var(--card-hover-shadow);
-        }
-
-        .card:hover::before {
-            opacity: 1;
-        }
-
-        .card.collected {
-            border-left-color: #4CAF50;
-            background: linear-gradient(135deg, #ffffff 0%, #f1f8f4 100%);
-        }
-
-        .card.expensed {
-            border-left-color: #FF9800;
-            background: linear-gradient(135deg, #ffffff 0%, #fff8f0 100%);
-        }
-
-        .card.balance {
-            border-left-color: #2196F3;
-            background: linear-gradient(135deg, #ffffff 0%, #f0f7ff 100%);
-        }
-
-        .card h3 {
-            font-family: 'Poppins', sans-serif;
-            color: #555;
-            margin-bottom: 15px;
-            font-size: 1.1em;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-
-        .card .amount {
-            font-size: 2.8em;
-            font-weight: 800;
-            margin-bottom: 5px;
-            transition: var(--transition);
-        }
-
-        .card:hover .amount {
-            transform: scale(1.05);
-        }
-
-        .card.collected .amount {
-            color: #4CAF50;
-        }
-
-        .card.expensed .amount {
-            color: #FF9800;
-        }
-
-        .card.balance .amount {
-            color: #2196F3;
-        }
-
-        .card.balance.negative .amount {
-            color: #F44336;
-        }
-
-        .charts-container {
+        /* Bento KPIs */
+        .bento-kpis {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
-            gap: 30px;
-            margin-bottom: 40px;
-            animation: fadeInUp 0.8s ease-out 1s both;
+            grid-template-columns: repeat(3, 1fr);
+            gap: clamp(12px, 2vw, 18px);
+            margin-bottom: clamp(20px, 3vw, 28px);
+            animation: fade-up 0.7s var(--ease-out) 0.15s both;
         }
 
-        .chart-card {
-            background: white;
-            border-radius: 20px;
-            padding: 30px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
-            transition: var(--transition);
+        @media (max-width: 900px) {
+            .bento-kpis { grid-template-columns: 1fr; }
+        }
+
+        .kpi {
             position: relative;
-            overflow: visible;
-            cursor: pointer;
-            -webkit-backface-visibility: hidden;
-            backface-visibility: hidden;
-            -webkit-perspective: 1000px;
-            perspective: 1000px;
+            padding: clamp(18px, 3vw, 26px);
+            border-radius: var(--radius-lg);
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow-soft);
+            overflow: hidden;
+            transition: transform 0.3s var(--ease-out), box-shadow 0.3s;
         }
 
-        .chart-card::before {
+        .kpi::before {
             content: '';
             position: absolute;
             top: 0;
             left: 0;
             right: 0;
             height: 4px;
-            background: var(--primary-gradient);
-            transform: scaleX(0);
-            transition: transform 0.6s ease;
-            z-index: 1;
+            opacity: 1;
         }
 
-        .chart-card:hover {
-            transform: translateY(-15px) scale(1.03);
-            box-shadow: 0 25px 50px rgba(0,0,0,0.2), 0 0 30px rgba(102, 126, 234, 0.3);
-            z-index: 10;
+        .kpi:hover {
+            transform: translateY(-3px);
+            box-shadow: var(--shadow-card);
         }
 
-        .chart-card:hover::before {
-            transform: scaleX(1);
-        }
+        .kpi--collected::before { background: linear-gradient(90deg, var(--accent-sage), var(--accent-green)); }
+        .kpi--expensed::before { background: linear-gradient(90deg, #e8b84a, var(--accent-honey)); }
+        .kpi--corpus::before { background: linear-gradient(90deg, #6ba8cc, var(--accent-sky)); }
 
-        .chart-card .chart-container {
-            transition: var(--transition);
-        }
-
-        .chart-card:hover .chart-container {
-            transform: scale(1.05);
-        }
-
-        .chart-card h3 {
-            font-family: 'Playfair Display', serif;
-            text-align: center;
-            margin-bottom: 25px;
-            color: #333;
-            font-size: 1.6em;
+        .kpi h3 {
+            font-size: 0.8125rem;
             font-weight: 700;
-            letter-spacing: 0.5px;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            margin-bottom: 8px;
         }
 
-        .chart-container {
+        .kpi .amount {
+            font-family: 'Nunito', sans-serif;
+            font-size: clamp(1.65rem, 4vw, 2.1rem);
+            font-weight: 800;
+            letter-spacing: -0.02em;
+            line-height: 1.1;
+        }
+
+        .kpi--collected .amount { color: var(--accent-green); }
+        .kpi--expensed .amount { color: #a67c00; }
+        .kpi--corpus .amount { color: var(--accent-sky); }
+        .kpi--corpus.negative .amount { color: var(--accent-coral); }
+
+        /* Charts bento */
+        .bento-charts {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: clamp(12px, 2vw, 18px);
+            margin-bottom: clamp(20px, 3vw, 28px);
+            animation: fade-up 0.7s var(--ease-out) 0.2s both;
+        }
+
+        @media (max-width: 900px) {
+            .bento-charts { grid-template-columns: 1fr; }
+        }
+
+        .panel {
+            border-radius: var(--radius-lg);
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow-soft);
+            padding: clamp(18px, 3vw, 26px);
+            transition: box-shadow 0.3s;
+        }
+
+        .panel:hover {
+            box-shadow: var(--shadow-card);
+        }
+
+        .panel h3 {
+            font-family: 'Nunito', sans-serif;
+            font-size: clamp(1.05rem, 2.2vw, 1.2rem);
+            font-weight: 800;
+            letter-spacing: -0.01em;
+            margin-bottom: 16px;
+            color: var(--text);
+        }
+
+        .chart-shell {
             position: relative;
-            height: 400px;
-            width: 100%;
-            min-height: 300px;
-            transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            height: min(380px, 55vw);
+            min-height: 260px;
         }
 
-        .expense-breakdown {
-            background: white;
-            border-radius: 20px;
-            padding: 35px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
-            margin-bottom: 40px;
-            animation: fadeInUp 0.8s ease-out 1.2s both;
+        @media (max-width: 768px) {
+            .chart-shell {
+                height: 300px;
+                min-height: 240px;
+            }
         }
 
-        .expense-breakdown h3 {
-            font-family: 'Playfair Display', serif;
-            margin-bottom: 25px;
-            color: #333;
-            font-size: 1.8em;
-            font-weight: 700;
-            letter-spacing: 1px;
+        @media (max-width: 480px) {
+            .chart-shell {
+                height: 280px;
+                min-height: 220px;
+            }
+        }
+
+        /* Expense grid */
+        .section-title {
+            font-family: 'Nunito', sans-serif;
+            font-size: clamp(1.2rem, 3vw, 1.45rem);
+            font-weight: 800;
+            letter-spacing: -0.01em;
+            margin-bottom: 16px;
+            color: var(--text);
+            animation: fade-up 0.7s var(--ease-out) 0.25s both;
+        }
+
+        .expense-bento {
+            margin-bottom: clamp(20px, 3vw, 28px);
+            animation: fade-up 0.7s var(--ease-out) 0.28s both;
         }
 
         .expense-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-            gap: 20px;
+            grid-template-columns: repeat(auto-fill, minmax(min(100%, 220px), 1fr));
+            gap: 12px;
         }
 
         .expense-item {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 20px;
-            background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
-            border-radius: 16px;
-            border-left: 5px solid;
-            transition: var(--transition);
-            position: relative;
-            overflow: hidden;
-            -webkit-backface-visibility: hidden;
-            backface-visibility: hidden;
-        }
-
-        .expense-item::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 0;
-            height: 100%;
-            background: rgba(255,255,255,0.5);
-            transition: width 0.4s ease;
+            gap: 12px;
+            padding: 14px 16px;
+            border-radius: var(--radius-md);
+            background: var(--bg-soft);
+            border: 1px solid var(--border);
+            transition: transform 0.25s var(--ease-out), box-shadow 0.25s;
         }
 
         .expense-item:hover {
-            transform: translateX(5px);
-            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-soft);
         }
-
-        .expense-item:hover::before {
-            width: 100%;
-        }
-
-        .expense-item.watchman { border-left-color: #FF6B6B; }
-        .expense-item.waste { border-left-color: #4ECDC4; }
-        .expense-item.electricity { border-left-color: #45B7D1; }
-        .expense-item.cleaning { border-left-color: #96CEB4; }
-        .expense-item.water { border-left-color: #FFEAA7; }
-        .expense-item.generator { border-left-color: #DDA0DD; }
-        .expense-item.softener { border-left-color: #FF8C42; }
-        .expense-item.misc { border-left-color: #98D8C8; }
 
         .expense-item .label {
+            font-size: 0.875rem;
             font-weight: 600;
-            color: #333;
-            position: relative;
-            z-index: 1;
+            color: var(--text-muted);
         }
 
         .expense-item .amount {
+            font-size: 0.9375rem;
             font-weight: 700;
-            color: #666;
-            font-size: 1.1em;
-            position: relative;
-            z-index: 1;
+            color: var(--text);
+            white-space: nowrap;
         }
 
-        .comments-section {
-            background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
-            border-radius: 20px;
-            padding: 35px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
-            margin-bottom: 40px;
-            animation: fadeInUp 0.8s ease-out 1.4s both;
+        .expense-item.watchman { border-left: 4px solid #c75c5c; }
+        .expense-item.waste { border-left: 4px solid #5a9e7a; }
+        .expense-item.electricity { border-left: 4px solid #4a8fb8; }
+        .expense-item.cleaning { border-left: 4px solid #7aab8e; }
+        .expense-item.water { border-left: 4px solid #c9a227; }
+        .expense-item.generator { border-left: 4px solid #8b7cb8; }
+        .expense-item.softener { border-left: 4px solid #c4804d; }
+        .expense-item.misc { border-left: 4px solid #5a9b8f; }
+
+        /* Comments */
+        .comments-panel {
+            border-radius: var(--radius-lg);
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow-soft);
+            padding: clamp(20px, 3vw, 28px);
+            animation: fade-up 0.7s var(--ease-out) 0.32s both;
         }
 
-        .comments-section h3 {
-            font-family: 'Playfair Display', serif;
-            margin-bottom: 20px;
-            color: #333;
-            font-size: 1.8em;
-            font-weight: 700;
-            letter-spacing: 1px;
+        .comments-panel h3 {
+            font-family: 'Nunito', sans-serif;
+            font-size: 1.15rem;
+            font-weight: 800;
+            margin-bottom: 12px;
+            color: var(--text);
         }
 
         .comments-text {
-            background: white;
-            padding: 25px;
-            border-radius: 16px;
-            border-left: 5px solid #4facfe;
-            font-style: italic;
-            color: #555;
-            line-height: 1.8;
+            font-size: 0.9375rem;
+            line-height: 1.75;
+            color: var(--text-muted);
             white-space: pre-wrap;
             word-wrap: break-word;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-            transition: var(--transition);
+            padding: 18px 20px;
+            border-radius: var(--radius-md);
+            background: var(--bg-soft);
+            border: 1px solid var(--border);
         }
 
-        .comments-text:hover {
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-            transform: translateX(3px);
+        .footer-note {
+            margin-top: 32px;
+            text-align: center;
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            opacity: 0.7;
         }
 
-        /* Mobile Responsive Styles */
+        @media (hover: none) and (pointer: coarse) {
+            .kpi:hover { transform: none; }
+            .panel:hover { box-shadow: none; }
+            .select-wrap select { min-height: 48px; }
+        }
+
         @media (max-width: 768px) {
-            body {
-                padding: 10px;
-            }
-
-            .container {
-                border-radius: 16px;
-            }
-
-            .header {
-                padding: 50px 20px;
-                background-size: cover;
-                background-position: center;
-            }
-
-            .header h1 {
-                font-size: 2.2em;
-                margin-bottom: 10px;
-                letter-spacing: 1px;
-            }
-
-            .header p {
-                font-size: 1em;
-                letter-spacing: 0.5px;
-            }
-
-            .main-content {
-                padding: 20px 15px;
-            }
-
-            .controls {
+            .toolbar {
                 flex-direction: column;
                 align-items: stretch;
-                gap: 15px;
-                margin-bottom: 25px;
             }
-
-            .month-selector {
+            .select-wrap {
                 width: 100%;
-                flex-direction: column;
-                align-items: stretch;
+            }
+            .select-wrap select {
+                width: 100%;
+                max-width: 100%;
+                min-height: 48px;
+                font-size: 16px;
+            }
+            .hero__content {
+                padding: clamp(22px, 5vw, 36px);
+            }
+            .bento-charts .panel {
+                padding: 16px 14px;
+            }
+            .expense-grid {
                 gap: 10px;
             }
-
-            .month-selector label {
-                font-size: 14px;
-                text-align: center;
-            }
-
-            .month-selector select {
-                max-width: 100%;
-                width: 100%;
-                padding: 14px 20px;
-                font-size: 16px; /* Prevents zoom on iOS */
-            }
-
-            .summary-cards {
-                grid-template-columns: 1fr;
-                gap: 15px;
-                margin-bottom: 25px;
-            }
-
-            .card {
-                padding: 20px;
-                border-radius: 16px;
-            }
-
-            .card h3 {
-                font-size: 0.95em;
-                margin-bottom: 12px;
-            }
-
-            .card .amount {
-                font-size: 2.2em;
-            }
-
-            .charts-container {
-                grid-template-columns: 1fr;
-                gap: 20px;
-                margin-bottom: 25px;
-            }
-
-            .chart-card {
-                padding: 20px 15px;
-                border-radius: 16px;
-            }
-
-            .chart-card h3 {
-                font-size: 1.3em;
-                margin-bottom: 20px;
-            }
-
-            .chart-container {
-                height: 300px;
-                min-height: 250px;
-            }
-
-            /* Mobile: Reduce pop-up effect slightly */
-            .chart-card:hover {
-                transform: translateY(-8px) scale(1.02);
-            }
-
-            .expense-breakdown {
-                padding: 20px 15px;
-                border-radius: 16px;
-                margin-bottom: 25px;
-            }
-
-            .expense-breakdown h3 {
-                font-size: 1.5em;
-                margin-bottom: 20px;
-            }
-
-            .expense-grid {
-                grid-template-columns: 1fr;
-                gap: 12px;
-            }
-
-            .expense-item {
-                padding: 15px;
-                border-radius: 12px;
-            }
-
-            .expense-item .label {
-                font-size: 0.95em;
-            }
-
-            .expense-item .amount {
-                font-size: 1em;
-            }
-
-            .comments-section {
-                padding: 20px 15px;
-                border-radius: 16px;
-                margin-bottom: 25px;
-            }
-
-            .comments-section h3 {
-                font-size: 1.5em;
-                margin-bottom: 15px;
-            }
-
-            .comments-text {
-                padding: 18px;
-                font-size: 0.9em;
-                line-height: 1.6;
-            }
         }
 
-        /* Small Mobile Devices */
         @media (max-width: 480px) {
-            body {
-                padding: 8px;
+            .page-wrap {
+                padding: 10px 12px 32px;
             }
-
-            .header {
-                padding: 40px 15px;
+            .hero {
+                min-height: 200px;
+                border-radius: var(--radius-lg);
             }
-
-            .header h1 {
-                font-size: 1.8em;
-            }
-
-            .header p {
-                font-size: 0.9em;
-            }
-
-            .main-content {
-                padding: 15px 10px;
-            }
-
-            .card .amount {
-                font-size: 1.8em;
-            }
-
-            .chart-container {
-                height: 280px;
-                min-height: 220px;
-            }
-
-            .chart-card h3 {
-                font-size: 1.1em;
-            }
-
-            .expense-breakdown h3,
-            .comments-section h3 {
-                font-size: 1.3em;
+            .kpi .amount {
+                font-size: 1.5rem;
             }
         }
 
-        /* Touch Device Optimizations */
-        @media (hover: none) and (pointer: coarse) {
-            /* For touch devices, reduce hover effects but keep animations */
-            .card:hover {
-                transform: translateY(-3px) scale(1.01);
-            }
-
-            .chart-card:hover {
-                transform: translateY(-5px) scale(1.01);
-            }
-
-            .expense-item:hover {
-                transform: translateX(2px);
-            }
-
-            /* Ensure buttons are tappable */
-            .month-selector select {
-                min-height: 48px; /* iOS recommended tap target */
-            }
-        }
-
-        /* Landscape Mobile */
         @media (max-width: 768px) and (orientation: landscape) {
-            .header {
-                padding: 30px 20px;
+            .hero {
+                min-height: 160px;
             }
-
-            .header h1 {
-                font-size: 1.8em;
-            }
-
-            .chart-container {
-                height: 250px;
-            }
-
-            .summary-cards {
+            .bento-kpis {
                 grid-template-columns: repeat(3, 1fr);
                 gap: 10px;
             }
-
-            .card .amount {
-                font-size: 1.6em;
+            .kpi {
+                padding: 14px 12px;
             }
-        }
-
-        /* Loading animation */
-        @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.5; }
-        }
-
-        .loading {
-            animation: pulse 2s ease-in-out infinite;
-        }
-
-        /* Smooth scroll */
-        html {
-            scroll-behavior: smooth;
-            -webkit-text-size-adjust: 100%;
-            -ms-text-size-adjust: 100%;
-        }
-
-        /* Prevent text size adjustment on iOS */
-        * {
-            -webkit-tap-highlight-color: transparent;
-        }
-
-        /* Improve touch targets on mobile */
-        @media (max-width: 768px) {
-            select, button {
-                -webkit-appearance: none;
-                -moz-appearance: none;
-                appearance: none;
-                touch-action: manipulation;
-            }
-
-            /* Ensure animations work on mobile */
-            .card,
-            .chart-card,
-            .expense-item {
-                -webkit-transform: translateZ(0);
-                transform: translateZ(0);
-                will-change: transform;
+            .kpi .amount {
+                font-size: 1.35rem;
             }
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="header">
-            <h1>🏠 Rainbow Homes</h1>
-            <p>Apartment Maintenance Expense Tracker</p>
-        </div>
+    <div class="bg-live" aria-hidden="true">
+        <div class="bg-live__gradient"></div>
+        <div class="bg-live__blob bg-live__blob--a"></div>
+        <div class="bg-live__blob bg-live__blob--b"></div>
+        <div class="bg-live__blob bg-live__blob--c"></div>
+        <div class="bg-live__shapes"></div>
+        <div class="bg-live__lines-slant" aria-hidden="true"></div>
+        <div class="bg-live__lines-slant-reverse" aria-hidden="true"></div>
+        <div class="bg-live__lines-horizontal" aria-hidden="true"></div>
+        <svg class="bg-live__svg-lines" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none" viewBox="0 0 1200 800" aria-hidden="true">
+            <path d="M-100 680 Q 300 520 600 400 T 1300 120" />
+            <path d="M-80 120 Q 400 280 700 420 T 1280 640" />
+            <path d="M220,-40 L220,840 M480,-40 L480,840 M740,-40 L740,840 M980,-40 L980,840" />
+        </svg>
+        <div class="bg-live__sparkle"></div>
+    </div>
 
-        <div class="main-content">
-            <div class="controls">
-                <div class="month-selector">
-                    <label for="monthSelect">Select Month:</label>
-                    <select id="monthSelect" onchange="changeMonth()">
+    <div class="page-wrap">
+        <header class="hero" role="banner">
+            <div class="hero__media" aria-hidden="true"></div>
+            <div class="hero__overlay" aria-hidden="true"></div>
+            <div class="hero__content">
+                <h1 class="hero__logo">Rainbow Homes</h1>
+                <p class="hero__tagline">Maintenance &amp; expenses</p>
+                <p class="hero__desc">A simple monthly summary for residents — what was collected, spent, and the corpus balance.</p>
+            </div>
+        </header>
+
+        <div class="toolbar">
+            <div style="width:100%;max-width:100%;">
+                <label for="monthSelect">Choose month</label>
+                <div class="select-wrap" style="margin-top:8px;">
+                    <select id="monthSelect" onchange="changeMonth()" aria-label="Select month">
                         <option value="2025-07">July 2025</option>
                         <option value="2025-08">August 2025</option>
                         <option value="2025-09">September 2025</option>
@@ -859,58 +753,56 @@
                         <option value="2025-12">December 2025</option>
                         <option value="2026-01">January 2026</option>
                         <option value="2026-02">February 2026</option>
+                        <option value="2026-03">March 2026</option>
                     </select>
                 </div>
             </div>
-
-            <div class="summary-cards">
-                <div class="card collected">
-                    <h3>Maintenance Collected</h3>
-                    <div class="amount" id="collectedAmount">₹0</div>
-                </div>
-                <div class="card expensed">
-                    <h3>Maintenance Expensed</h3>
-                    <div class="amount" id="expensedAmount">₹0</div>
-                </div>
-                <div class="card balance">
-                    <h3>Corpus Fund</h3>
-                    <div class="amount" id="balanceAmount">₹0</div>
-                </div>
-            </div>
-
-            <div class="charts-container">
-                <div class="chart-card" title="Hover to see details">
-                    <h3>Expense Breakdown</h3>
-                    <div class="chart-container">
-                        <canvas id="expenseChart"></canvas>
-                    </div>
-                </div>
-                <div class="chart-card" title="Hover to see details">
-                    <h3>Fund Distribution (Expensed vs Corpus Fund)</h3>
-                    <div class="chart-container">
-                        <canvas id="fundChart"></canvas>
-                    </div>
-                </div>
-            </div>
-
-            <div class="expense-breakdown">
-                <h3>Detailed Expense Breakdown</h3>
-                <div class="expense-grid" id="expenseGrid">
-                    <!-- Expense items will be populated here -->
-                </div>
-            </div>
-
-            <div class="comments-section">
-                <h3>Comments</h3>
-                <div class="comments-text" id="commentsText">
-                    <!-- Comments will be populated here -->
-                </div>
-            </div>
         </div>
+
+        <section class="bento-kpis" aria-label="Summary">
+            <article class="kpi kpi--collected">
+                <h3>Collected</h3>
+                <div class="amount" id="collectedAmount">₹0</div>
+            </article>
+            <article class="kpi kpi--expensed">
+                <h3>Expensed</h3>
+                <div class="amount" id="expensedAmount">₹0</div>
+            </article>
+            <article class="kpi kpi--corpus" id="corpusCard">
+                <h3>Corpus fund</h3>
+                <div class="amount" id="balanceAmount">₹0</div>
+            </article>
+        </section>
+
+        <section class="bento-charts" aria-label="Charts">
+            <div class="panel" title="Hover segments for details">
+                <h3>Expense breakdown</h3>
+                <div class="chart-shell">
+                    <canvas id="expenseChart"></canvas>
+                </div>
+            </div>
+            <div class="panel" title="Hover segments for details">
+                <h3>Fund distribution</h3>
+                <div class="chart-shell">
+                    <canvas id="fundChart"></canvas>
+                </div>
+            </div>
+        </section>
+
+        <section class="expense-bento" aria-labelledby="expense-heading">
+            <h2 class="section-title" id="expense-heading">Expense details</h2>
+            <div class="expense-grid" id="expenseGrid"></div>
+        </section>
+
+        <section class="comments-panel" aria-labelledby="comments-heading">
+            <h3 id="comments-heading">Society notes</h3>
+            <div class="comments-text" id="commentsText"></div>
+        </section>
+
+        <p class="footer-note">Read-only summary for Rainbow Homes residents</p>
     </div>
 
     <script>
-        // Data structure - loads from localStorage (updated by parent RainbowHome.html)
         let maintenanceData = {
             '2025-07': {
                 collected: 20000,
@@ -924,8 +816,8 @@
                     cleaning: 1000,
                     water: 2911,
                     generator: 3826,
-                    softener: 0,
-                    misc: 0
+                    misc: 0,
+                    softener: 0
                 },
                 comments: "-7541 is reduced from the corpus fund due to additional expense in the last month for water bill, cleaning materials and generator fuel"
             },
@@ -941,8 +833,8 @@
                     cleaning: 170,
                     water: 1445,
                     generator: 0,
-                    softener: 0,
-                    misc: 6200
+                    misc: 6200,
+                    softener: 0
                 },
                 comments: "-7541 is reduced from the corpus fund due to additional expense in the last month for water bill, cleaning materials and generator fuel\n\nMiscellaneous expense details - \n-2500 for Drainage block\n-1000 for Common Electricity meter replacement\n-2700 for Water testing"
             },
@@ -958,8 +850,8 @@
                     cleaning: 770,
                     water: 1416,
                     generator: 0,
-                    softener: 0,
-                    misc: 3008
+                    misc: 3008,
+                    softener: 0
                 },
                 comments: "Miscellaneous expense details-\n-955 - Old common electricity bill \n-2053 - Sump Cleaning"
             },
@@ -978,7 +870,7 @@
                     softener: 7950,
                     misc: 8853
                 },
-                comments: "600 - Dasara Maamulu to Watchman\n400 - Dasara Maamulu to Waste Management\n5000 - Diwali Lunch\n400 - Diwali Lunch Disposables\n1000 - Diwali Flowers and Mango Leaves\n218 - Diwali Lights\n277 - Water Bottles\n950 - Salt Delivery Charges\n7000 - Salt 500 Kgs bought for next 5-6 months. \n958 - Old Common Electricity Bill "
+                comments: "Miscellaneous-\n600 - Dasara Maamulu to Watchman\n400 - Dasara Maamulu to Waste Management\n5000 - Diwali Lunch\n400 - Diwali Lunch Disposables\n1000 - Diwali Flowers and Mango Leaves\n218 - Diwali Lights\n277 - Water Bottles\n958 - Old Common Electricity Bill \n\nSoftner Maintenace-\n950 - Softner Salt Delivery Charges\n7000 - Softner Salt 500 Kgs bought for next 5-6 months. "
             },
             '2025-11': {
                 collected: 25000,
@@ -992,8 +884,8 @@
                     cleaning: 534,
                     water: 1416,
                     generator: 0,
-                    softener: 0,
-                    misc: 2788
+                    misc: 2788,
+                    softener: 0
                 },
                 comments: "958 - Old Common Electricity Bill\n1500 - Generator auto switch extra cable\n330 - Generator Neutral connection cable charges and switch for light in the area behind lift. "
             },
@@ -1012,7 +904,7 @@
                     softener: 9994,
                     misc: 500
                 },
-                comments: "500 - Waste Bin Cutting - Carpenter\n80 - Softner related material\n600 - Terrace Water softner Electricity connection - Electrician\n1814 - Water softner shifting additional material charges\n7500 - Water Softner Salt (500Kg) + transport charges\n"
+                comments: "Miscellaneous-\n500 - Waste Bin Cutting - Carpenter\n\nSoftner Maintenance-\n80 - Softner related material\n600 - Terrace Water softner Electricity connection - Electrician\n1814 - Water softner shifting additional material charges\n7500 - Water Softner Salt (500Kg) + transport charges\n"
             },
             '2026-01': {
                 collected: 25000,
@@ -1026,22 +918,39 @@
                     cleaning: 200,
                     water: 1416,
                     generator: 0,
-                    softener: 0,
-                    misc: 4500
+                    misc: 4500,
+                    softener: 0
                 },
                 comments: "2000 - Door welding work\n500 - Pongal Flowers for apartment\n2000 - Advance for Watchman (Will be deducted next month in Salary)"
             },
             '2026-02': {
-                collected: 25000,
-                expensed: 16934,
-                balance: 8066,
-                corpusFund: 26177,
+                collected: 22500,
+                expensed: 7416,
+                balance: 15084,
+                corpusFund: 33195,
                 expenses: {
                     watchman: 6000,
+                    waste: 0,
+                    electricity: 0,
+                    cleaning: 0,
+                    water: 1416,
+                    generator: 0,
+                    softener: 0,
+                    misc: 0
+                },
+                comments: "2000 reduced from Watchman Salary as advance is give last month"
+            },
+            '2026-03': {
+                collected: 25000,
+                expensed: 21355,
+                balance: 3645,
+                corpusFund: 36840,
+                expenses: {
+                    watchman: 8000,
                     waste: 1000,
-                    electricity: 8068,
-                    cleaning: 443,
-                    water: 1423,
+                    electricity: 10739,
+                    cleaning: 200,
+                    water: 1416,
                     generator: 0,
                     softener: 0,
                     misc: 0
@@ -1050,16 +959,17 @@
             }
         };
 
-        let currentMonth = '2026-02';
+        let currentMonth = '2026-03';
         let expenseChart = null;
         let fundChart = null;
+
+        const CHART_TEXT = '#5c6b63';
+        const CHART_BORDER = '#ffffff';
 
         function updateMonthDropdown() {
             const monthSelect = document.getElementById('monthSelect');
             const currentValue = monthSelect.value;
-            
             monthSelect.innerHTML = '';
-            
             const sortedMonths = Object.keys(maintenanceData).sort();
             sortedMonths.forEach(month => {
                 const option = document.createElement('option');
@@ -1067,7 +977,6 @@
                 option.textContent = new Date(month + '-01').toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
                 monthSelect.appendChild(option);
             });
-            
             if (sortedMonths.includes(currentValue)) {
                 monthSelect.value = currentValue;
                 currentMonth = currentValue;
@@ -1084,20 +993,15 @@
 
         function updateDisplay() {
             const data = maintenanceData[currentMonth];
-            
-            // Animate numbers
             animateValue('collectedAmount', 0, data.collected, 1000);
             animateValue('expensedAmount', 0, data.expensed, 1000);
             animateValue('balanceAmount', 0, data.corpusFund, 1000);
-            
-            // Update balance card color
-            const balanceCard = document.querySelector('.card.balance');
+            const corpusCard = document.getElementById('corpusCard');
             if (data.corpusFund < 0) {
-                balanceCard.classList.add('negative');
+                corpusCard.classList.add('negative');
             } else {
-                balanceCard.classList.remove('negative');
+                corpusCard.classList.remove('negative');
             }
-            
             updateExpenseBreakdown(data.expenses);
             document.getElementById('commentsText').textContent = data.comments;
             updateCharts();
@@ -1107,21 +1011,18 @@
             const element = document.getElementById(id);
             const range = end - start;
             const startTime = performance.now();
-            
             function update(currentTime) {
                 const elapsed = currentTime - startTime;
                 const progress = Math.min(elapsed / duration, 1);
                 const easeOutQuart = 1 - Math.pow(1 - progress, 4);
                 const current = Math.floor(start + range * easeOutQuart);
                 element.textContent = `₹${current.toLocaleString()}`;
-                
                 if (progress < 1) {
                     requestAnimationFrame(update);
                 } else {
                     element.textContent = `₹${end.toLocaleString()}`;
                 }
             }
-            
             requestAnimationFrame(update);
         }
 
@@ -1137,9 +1038,8 @@
                 { key: 'softener', label: 'Softener Maintenance', amount: expenses.softener, class: 'softener' },
                 { key: 'misc', label: 'Miscellaneous', amount: expenses.misc, class: 'misc' }
             ];
-
             expenseGrid.innerHTML = expenseItems.map((item, index) => `
-                <div class="expense-item ${item.class}" style="animation: fadeInUp 0.5s ease-out ${index * 0.1}s both;">
+                <div class="expense-item ${item.class}" style="animation: fadeInUp 0.45s ease-out ${index * 0.06}s both;">
                     <span class="label">${item.label}</span>
                     <span class="amount">₹${item.amount.toLocaleString()}</span>
                 </div>
@@ -1161,20 +1061,51 @@
             }
         }
 
+        function chartLegendOptions() {
+            return {
+                position: 'bottom',
+                labels: {
+                    padding: 18,
+                    usePointStyle: true,
+                    pointStyle: 'circle',
+                    color: CHART_TEXT,
+                    font: { size: 11, weight: '600', family: "'Nunito', sans-serif" }
+                }
+            };
+        }
+
+        function chartTooltipOptions() {
+            return {
+                backgroundColor: 'rgba(255, 255, 255, 0.97)',
+                titleColor: '#2c3d35',
+                bodyColor: '#5c6b63',
+                borderColor: 'rgba(44, 61, 53, 0.12)',
+                borderWidth: 1,
+                padding: 14,
+                titleFont: { size: 13, weight: '700' },
+                bodyFont: { size: 12 },
+                callbacks: {
+                    label: function(context) {
+                        const label = context.label || '';
+                        const value = context.parsed || 0;
+                        const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                        const percentage = ((value / total) * 100).toFixed(1);
+                        return label + ': ₹' + value.toLocaleString() + ' (' + percentage + '%)';
+                    }
+                }
+            };
+        }
+
         function createCharts() {
             try {
                 destroyCharts();
-                
                 const expenseCanvas = document.getElementById('expenseChart');
                 const fundCanvas = document.getElementById('fundChart');
-                
                 if (!expenseCanvas || !fundCanvas) {
                     console.error('Canvas elements not found');
                     return;
                 }
-
                 if (typeof Chart === 'undefined') {
-                    console.error('Chart.js not loaded');
                     setTimeout(createCharts, 500);
                     return;
                 }
@@ -1186,56 +1117,24 @@
                         datasets: [{
                             data: [],
                             backgroundColor: [
-                                '#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', 
-                                '#FFEAA7', '#DDA0DD', '#FF8C42', '#98D8C8'
+                                '#c75c5c', '#5a9e7a', '#4a8fb8', '#7aab8e',
+                                '#d4b84a', '#8b7cb8', '#c4804d', '#5a9b8f'
                             ],
-                            borderWidth: 3,
-                            borderColor: '#fff'
+                            borderWidth: 2,
+                            borderColor: CHART_BORDER,
+                            hoverOffset: 14
                         }]
                     },
                     options: {
                         responsive: true,
                         maintainAspectRatio: false,
-                        animation: {
-                            animateRotate: true,
-                            animateScale: true,
-                            duration: 1500
-                        },
+                        animation: { animateRotate: true, animateScale: true, duration: 1200, easing: 'easeOutQuart' },
                         onHover: (event, activeElements) => {
                             event.native.target.style.cursor = activeElements.length > 0 ? 'pointer' : 'default';
                         },
                         plugins: {
-                            legend: {
-                                position: 'bottom',
-                                labels: {
-                                    padding: 20,
-                                    usePointStyle: true,
-                                    font: {
-                                        size: 12,
-                                        weight: '600'
-                                    }
-                                }
-                            },
-                            tooltip: {
-                                backgroundColor: 'rgba(0,0,0,0.9)',
-                                padding: 15,
-                                titleFont: {
-                                    size: 15,
-                                    weight: '700'
-                                },
-                                bodyFont: {
-                                    size: 14
-                                },
-                                callbacks: {
-                                    label: function(context) {
-                                        const label = context.label || '';
-                                        const value = context.parsed || 0;
-                                        const total = context.dataset.data.reduce((a, b) => a + b, 0);
-                                        const percentage = ((value / total) * 100).toFixed(1);
-                                        return label + ': ₹' + value.toLocaleString() + ' (' + percentage + '%)';
-                                    }
-                                }
-                            }
+                            legend: chartLegendOptions(),
+                            tooltip: chartTooltipOptions()
                         }
                     }
                 });
@@ -1246,60 +1145,27 @@
                         labels: ['Expensed', 'Corpus Fund'],
                         datasets: [{
                             data: [],
-                            backgroundColor: ['#FF9800', '#2196F3'],
-                            borderWidth: 3,
-                            borderColor: '#fff'
+                            backgroundColor: ['#d4a84a', '#5a9e9e'],
+                            borderWidth: 2,
+                            borderColor: CHART_BORDER,
+                            hoverOffset: 14
                         }]
                     },
                     options: {
                         responsive: true,
                         maintainAspectRatio: false,
-                        animation: {
-                            animateRotate: true,
-                            animateScale: true,
-                            duration: 1500
-                        },
+                        animation: { animateRotate: true, animateScale: true, duration: 1200, easing: 'easeOutQuart' },
                         onHover: (event, activeElements) => {
                             event.native.target.style.cursor = activeElements.length > 0 ? 'pointer' : 'default';
                         },
                         plugins: {
-                            legend: {
-                                position: 'bottom',
-                                labels: {
-                                    padding: 20,
-                                    usePointStyle: true,
-                                    font: {
-                                        size: 12,
-                                        weight: '600'
-                                    }
-                                }
-                            },
-                            tooltip: {
-                                backgroundColor: 'rgba(0,0,0,0.9)',
-                                padding: 15,
-                                titleFont: {
-                                    size: 15,
-                                    weight: '700'
-                                },
-                                bodyFont: {
-                                    size: 14
-                                },
-                                callbacks: {
-                                    label: function(context) {
-                                        const label = context.label || '';
-                                        const value = context.parsed || 0;
-                                        const total = context.dataset.data.reduce((a, b) => a + b, 0);
-                                        const percentage = ((value / total) * 100).toFixed(1);
-                                        return label + ': ₹' + value.toLocaleString() + ' (' + percentage + '%)';
-                                    }
-                                }
-                            }
+                            legend: chartLegendOptions(),
+                            tooltip: chartTooltipOptions()
                         }
                     }
                 });
 
                 updateCharts();
-                
             } catch (error) {
                 console.error('Error creating charts:', error);
             }
@@ -1307,27 +1173,21 @@
 
         function updateCharts() {
             try {
-                if (!expenseChart || !fundChart) {
-                    return;
-                }
-
+                if (!expenseChart || !fundChart) return;
                 const data = maintenanceData[currentMonth];
-                
                 const expenseLabels = [];
                 const expenseData = [];
                 const expenseColors = [];
-                
                 const colorMap = {
-                    watchman: '#FF6B6B',
-                    waste: '#4ECDC4',
-                    electricity: '#45B7D1',
-                    cleaning: '#96CEB4',
-                    water: '#FFEAA7',
-                    generator: '#DDA0DD',
-                    softener: '#FF8C42',
-                    misc: '#98D8C8'
+                    watchman: '#c75c5c',
+                    waste: '#5a9e7a',
+                    electricity: '#4a8fb8',
+                    cleaning: '#7aab8e',
+                    water: '#d4b84a',
+                    generator: '#8b7cb8',
+                    softener: '#c4804d',
+                    misc: '#5a9b8f'
                 };
-                
                 const labelMap = {
                     watchman: 'Watchman Salary',
                     waste: 'Waste Management',
@@ -1338,7 +1198,6 @@
                     softener: 'Softener Maintenance',
                     misc: 'Miscellaneous'
                 };
-                
                 Object.entries(data.expenses).forEach(([key, value]) => {
                     if (value > 0) {
                         expenseLabels.push(labelMap[key]);
@@ -1346,19 +1205,16 @@
                         expenseColors.push(colorMap[key]);
                     }
                 });
-
                 expenseChart.data.labels = expenseLabels;
                 expenseChart.data.datasets[0].data = expenseData;
                 expenseChart.data.datasets[0].backgroundColor = expenseColors;
                 expenseChart.update('active');
 
                 const fundData = [data.expensed, Math.abs(data.corpusFund)];
-                const fundColors = data.corpusFund < 0 ? ['#FF9800', '#F44336'] : ['#FF9800', '#2196F3'];
-                
+                const fundColors = data.corpusFund < 0 ? ['#d4a84a', '#c75c5c'] : ['#d4a84a', '#5a9e9e'];
                 fundChart.data.datasets[0].data = fundData;
                 fundChart.data.datasets[0].backgroundColor = fundColors;
                 fundChart.update('active');
-                
             } catch (error) {
                 console.error('Error updating charts:', error);
             }
@@ -1369,16 +1225,11 @@
             updateDisplay();
         }
 
-        // Export functions removed - read-only public version
-        // This file reads data from localStorage (saved by RainbowHome.html parent file)
-
-        // Load data from localStorage (updated by parent RainbowHome.html)
         function loadDataFromStorage() {
             try {
                 const savedData = localStorage.getItem('rainbowHomesData');
                 if (savedData) {
                     const parsedData = JSON.parse(savedData);
-                    // Merge saved data, ensuring softener field exists
                     Object.keys(parsedData).forEach(month => {
                         if (parsedData[month] && parsedData[month].expenses) {
                             if (typeof parsedData[month].expenses.softener === 'undefined') {
@@ -1387,7 +1238,6 @@
                         }
                         maintenanceData[month] = parsedData[month];
                     });
-                    console.log('Data loaded from localStorage (parent file)');
                     return true;
                 }
             } catch (error) {
@@ -1397,35 +1247,26 @@
         }
 
         function initializeApp() {
-            // Load data from parent file's localStorage
             loadDataFromStorage();
-            
             updateMonthDropdown();
-            
             function waitForChartJS() {
                 if (typeof Chart !== 'undefined') {
-                    setTimeout(function() {
-                        init();
-                    }, 100);
+                    setTimeout(function() { init(); }, 100);
                 } else {
                     setTimeout(waitForChartJS, 100);
                 }
             }
-            
             waitForChartJS();
-            
-            // Periodically check for updates from parent file
             setInterval(function() {
                 const oldData = JSON.stringify(maintenanceData);
                 loadDataFromStorage();
                 const newData = JSON.stringify(maintenanceData);
                 if (oldData !== newData) {
-                    console.log('Data updated from parent file, refreshing display...');
                     updateMonthDropdown();
                     updateDisplay();
                     updateCharts();
                 }
-            }, 2000); // Check every 2 seconds
+            }, 2000);
         }
 
         if (document.readyState === 'loading') {
