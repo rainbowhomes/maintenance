@@ -754,6 +754,7 @@
                         <option value="2026-01">January 2026</option>
                         <option value="2026-02">February 2026</option>
                         <option value="2026-03">March 2026</option>
+                        <option value="2026-04">April 2026</option>
                     </select>
                 </div>
             </div>
@@ -956,10 +957,27 @@
                     misc: 0
                 },
                 comments: "No comments"
+            },
+            '2026-04': {
+                collected: 25000,
+                expensed: 45778,
+                balance: -20778,
+                corpusFund: 9044,
+                expenses: {
+                    watchman: 8000,
+                    waste: 1000,
+                    electricity: 15011,
+                    cleaning: 350,
+                    water: 1417,
+                    generator: 0,
+                    softener: 0,
+                    misc: 20000
+                },
+                comments: "Miscellaneous details-\n10,000 - Lift AMC\n1000 - CCTV Repair\n180 - First Plumber check via Urban Company\n1000 - Building Plumber Service\n2821 - Plumbing Material to Fix Air Block issue in West side\n5000 - Watchman Advance (To be deducted in May)"
             }
         };
 
-        let currentMonth = '2026-03';
+        let currentMonth = '2026-04';
         let expenseChart = null;
         let fundChart = null;
 
