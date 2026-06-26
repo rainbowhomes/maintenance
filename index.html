@@ -1395,11 +1395,11 @@
             },
             '2026-05': {
                 collected: 30000,
-                expensed: 40576,
-                balance: -10576,
-                corpusFund: -1525,
+                expensed: 39576,
+                balance: -9576,
+                corpusFund: -525,
                 expenses: {
-                    watchman: 4000,
+                    watchman: 3000,
                     waste: 1000,
                     electricity: 17410,
                     cleaning: 150,
@@ -1409,10 +1409,27 @@
                     misc: 8800
                 },
                 comments: "Softener Maintenance:\n7000 for 500KG Salt\n800 for Transport\n\nMiscellaneous:\n8800 - Water Tanker\n800 - Plumber work for disconnecting ground water and terrace water pump connection\n1000 - Sump cleaning"
+            },
+            '2026-06': {
+                collected: 55000,
+                expensed: 41491,
+                balance: 13509,
+                corpusFund: 12984,
+                expenses: {
+                    watchman: 8000,
+                    waste: 1000,
+                    electricity: 14627,
+                    cleaning: 0,
+                    water: 1416,
+                    generator: 4150,
+                    softener: 0,
+                    misc: 12298
+                },
+                comments: "Miscellaneous:\n3498 - Generate Maintenance and Engine Oil change\n8800 - Water Tanker"
             }
         };
 
-        let currentMonth = '2026-05';
+        let currentMonth = '2026-06';
         let chartRegistry = [];
         let resizeTimer = null;
 
